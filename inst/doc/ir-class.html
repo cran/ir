@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Henning Teickner" />
+
+
+<title>Introduction to the irclass</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+<style type="text/css">.pagedtable {
+overflow: auto;
+padding-left: 8px;
+padding-right: 8px;
+}
+.pagedtable-wrapper {
+border: 1px solid #ccc;
+border-radius: 4px;
+margin-bottom: 10px;
+}
+.pagedtable table {
+width: 100%;
+max-width: 100%;
+margin: 0;
+}
+.pagedtable th {
+padding: 0 5px 0 5px;
+border: none;
+border-bottom: 2px solid #dddddd;
+min-width: 45px;
+}
+.pagedtable-empty th {
+display: none;
+}
+.pagedtable td {
+padding: 0 4px 0 4px;
+}
+.pagedtable .even {
+background-color: rgba(140, 140, 140, 0.1);
+}
+.pagedtable-padding-col {
+display: none;
+}
+.pagedtable a {
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+}
+.pagedtable-index-nav {
+cursor: pointer;
+padding: 0 5px 0 5px;
+float: right;
+border: 0;
+}
+.pagedtable-index-nav-disabled {
+cursor: default;
+text-decoration: none;
+color: #999;
+}
+a.pagedtable-index-nav-disabled:hover {
+text-decoration: none;
+color: #999;
+}
+.pagedtable-indexes {
+cursor: pointer;
+float: right;
+border: 0;
+}
+.pagedtable-index-current {
+cursor: default;
+text-decoration: none;
+font-weight: bold;
+color: #333;
+border: 0;
+}
+a.pagedtable-index-current:hover {
+text-decoration: none;
+font-weight: bold;
+color: #333;
+}
+.pagedtable-index {
+width: 30px;
+display: inline-block;
+text-align: center;
+border: 0;
+}
+.pagedtable-index-separator-left {
+display: inline-block;
+color: #333;
+font-size: 9px;
+padding: 0 0 0 0;
+cursor: default;
+}
+.pagedtable-index-separator-right {
+display: inline-block;
+color: #333;
+font-size: 9px;
+padding: 0 4px 0 0;
+cursor: default;
+}
+.pagedtable-footer {
+padding-top: 4px;
+padding-bottom: 5px;
+}
+.pagedtable-not-empty .pagedtable-footer {
+border-top: 2px solid #dddddd;
+}
+.pagedtable-info {
+overflow: hidden;
+color: #999;
+white-space: nowrap;
+text-overflow: ellipsis;
+}
+.pagedtable-header-name {
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.pagedtable-header-type {
+color: #999;
+font-weight: 400;
+}
+.pagedtable-na-cell {
+font-style: italic;
+opacity: 0.3;
+}
+</style>
+<script>// Production steps of ECMA-262, Edition 5, 15.4.4.18
+// Reference: http://es5.github.io/#x15.4.4.18
+if (!Array.prototype.forEach) {
+
+  Array.prototype.forEach = function(callback, thisArg) {
+
+    var T, k;
+
+    if (this === null) {
+      throw new TypeError(' this is null or not defined');
+    }
+
+    // 1. Let O be the result of calling toObject() passing the
+    // |this| value as the argument.
+    var O = Object(this);
+
+    // 2. Let lenValue be the result of calling the Get() internal
+    // method of O with the argument "length".
+    // 3. Let len be toUint32(lenValue).
+    var len = O.length >>> 0;
+
+    // 4. If isCallable(callback) is false, throw a TypeError exception.
+    // See: http://es5.github.com/#x9.11
+    if (typeof callback !== "function") {
+      throw new TypeError(callback + ' is not a function');
+    }
+
+    // 5. If thisArg was supplied, let T be thisArg; else let
+    // T be undefined.
+    if (arguments.length > 1) {
+      T = thisArg;
+    }
+
+    // 6. Let k be 0
+    k = 0;
+
+    // 7. Repeat, while k < len
+    while (k < len) {
+
+      var kValue;
+
+      // a. Let Pk be ToString(k).
+      //    This is implicit for LHS operands of the in operator
+      // b. Let kPresent be the result of calling the HasProperty
+      //    internal method of O with argument Pk.
+      //    This step can be combined with c
+      // c. If kPresent is true, then
+      if (k in O) {
+
+        // i. Let kValue be the result of calling the Get internal
+        // method of O with argument Pk.
+        kValue = O[k];
+
+        // ii. Call the Call internal method of callback with T as
+        // the this value and argument list containing kValue, k, and O.
+        callback.call(T, kValue, k, O);
+      }
+      // d. Increase k by 1.
+      k++;
+    }
+    // 8. return undefined
+  };
+}
+
+// Production steps of ECMA-262, Edition 5, 15.4.4.19
+// Reference: http://es5.github.io/#x15.4.4.19
+if (!Array.prototype.map) {
+
+  Array.prototype.map = function(callback, thisArg) {
+
+    var T, A, k;
+
+    if (this == null) {
+      throw new TypeError(' this is null or not defined');
+    }
+
+    // 1. Let O be the result of calling ToObject passing the |this|
+    //    value as the argument.
+    var O = Object(this);
+
+    // 2. Let lenValue be the result of calling the Get internal
+    //    method of O with the argument "length".
+    // 3. Let len be ToUint32(lenValue).
+    var len = O.length >>> 0;
+
+    // 4. If IsCallable(callback) is false, throw a TypeError exception.
+    // See: http://es5.github.com/#x9.11
+    if (typeof callback !== 'function') {
+      throw new TypeError(callback + ' is not a function');
+    }
+
+    // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
+    if (arguments.length > 1) {
+      T = thisArg;
+    }
+
+    // 6. Let A be a new array created as if by the expression new Array(len)
+    //    where Array is the standard built-in constructor with that name and
+    //    len is the value of len.
+    A = new Array(len);
+
+    // 7. Let k be 0
+    k = 0;
+
+    // 8. Repeat, while k < len
+    while (k < len) {
+
+      var kValue, mappedValue;
+
+      // a. Let Pk be ToString(k).
+      //   This is implicit for LHS operands of the in operator
+      // b. Let kPresent be the result of calling the HasProperty internal
+      //    method of O with argument Pk.
+      //   This step can be combined with c
+      // c. If kPresent is true, then
+      if (k in O) {
+
+        // i. Let kValue be the result of calling the Get internal
+        //    method of O with argument Pk.
+        kValue = O[k];
+
+        // ii. Let mappedValue be the result of calling the Call internal
+        //     method of callback with T as the this value and argument
+        //     list containing kValue, k, and O.
+        mappedValue = callback.call(T, kValue, k, O);
+
+        // iii. Call the DefineOwnProperty internal method of A with arguments
+        // Pk, Property Descriptor
+        // { Value: mappedValue,
+        //   Writable: true,
+        //   Enumerable: true,
+        //   Configurable: true },
+        // and false.
+
+        // In browsers that support Object.defineProperty, use the following:
+        // Object.defineProperty(A, k, {
+        //   value: mappedValue,
+        //   writable: true,
+        //   enumerable: true,
+        //   configurable: true
+        // });
+
+        // For best browser support, use the following:
+        A[k] = mappedValue;
+      }
+      // d. Increase k by 1.
+      k++;
+    }
+
+    // 9. return A
+    return A;
+  };
+}
+
+var PagedTable = function (pagedTable) {
+  var me = this;
+
+  var source = function(pagedTable) {
+    var sourceElems = [].slice.call(pagedTable.children).filter(function(e) {
+      return e.hasAttribute("data-pagedtable-source");
+    });
+
+    if (sourceElems === null || sourceElems.length !== 1) {
+      throw("A single data-pagedtable-source was not found");
+    }
+
+    return JSON.parse(sourceElems[0].innerHTML);
+  }(pagedTable);
+
+  var options = function(source) {
+    var options = typeof(source.options) !== "undefined" &&
+      source.options !== null ? source.options : {};
+
+    var columns = typeof(options.columns) !== "undefined" ? options.columns : {};
+    var rows = typeof(options.rows) !== "undefined" ? options.rows : {};
+
+    var positiveIntOrNull = function(value) {
+      return parseInt(value) >= 0 ? parseInt(value) : null;
+    };
+
+    return {
+      pages: positiveIntOrNull(options.pages),
+      rows: {
+        min: positiveIntOrNull(rows.min),
+        max: positiveIntOrNull(rows.max),
+        total: positiveIntOrNull(rows.total)
+      },
+      columns: {
+        min: positiveIntOrNull(columns.min),
+        max: positiveIntOrNull(columns.max),
+        total: positiveIntOrNull(columns.total)
+      }
+    };
+  }(source);
+
+  var Measurer = function() {
+
+    // set some default initial values that will get adjusted in runtime
+    me.measures = {
+      padding: 12,
+      character: 8,
+      height: 15,
+      defaults: true
+    };
+
+    me.calculate = function(measuresCell) {
+      if (!me.measures.defaults)
+        return;
+
+      var measuresCellStyle = window.getComputedStyle(measuresCell, null);
+
+      var newPadding = parsePadding(measuresCellStyle.paddingLeft) +
+            parsePadding(measuresCellStyle.paddingRight);
+
+      var sampleString = "ABCDEFGHIJ0123456789";
+      var newCharacter = Math.ceil(measuresCell.clientWidth / sampleString.length);
+
+      if (newPadding <= 0 || newCharacter <= 0)
+        return;
+
+      me.measures.padding = newPadding;
+      me.measures.character = newCharacter;
+      me.measures.height = measuresCell.clientHeight;
+      me.measures.defaults = false;
+    };
+
+    return me;
+  };
+
+  var Page = function(data, options) {
+    var me = this;
+
+    var defaults = {
+      max: 7,
+      rows: 10
+    };
+
+    var totalPages = function() {
+      return Math.ceil(data.length / me.rows);
+    };
+
+    me.number = 0;
+    me.max = options.pages !== null ? options.pages : defaults.max;
+    me.visible = me.max;
+    me.rows = options.rows.min !== null ? options.rows.min : defaults.rows;
+    me.total = totalPages();
+
+    me.setRows = function(newRows) {
+      me.rows = newRows;
+      me.total = totalPages();
+    };
+
+    me.setPageNumber = function(newPageNumber) {
+      if (newPageNumber < 0) newPageNumber = 0;
+      if (newPageNumber >= me.total) newPageNumber = me.total - 1;
+
+      me.number = newPageNumber;
+    };
+
+    me.setVisiblePages = function(visiblePages) {
+      me.visible = Math.min(me.max, visiblePages);
+      me.setPageNumber(me.number);
+    };
+
+    me.getVisiblePageRange = function() {
+      var start = me.number - Math.max(Math.floor((me.visible - 1) / 2), 0);
+      var end = me.number + Math.floor(me.visible / 2) + 1;
+      var pageCount = me.total;
+
+      if (start < 0) {
+        var diffToStart = 0 - start;
+        start += diffToStart;
+        end += diffToStart;
+      }
+
+      if (end > pageCount) {
+        var diffToEnd = end - pageCount;
+        start -= diffToEnd;
+        end -= diffToEnd;
+      }
+
+      start = start < 0 ? 0 : start;
+      end = end >= pageCount ? pageCount : end;
+
+      var first = false;
+      var last = false;
+
+      if (start > 0 && me.visible > 1) {
+        start = start + 1;
+        first = true;
+      }
+
+      if (end < pageCount && me.visible > 2) {
+        end = end - 1;
+        last = true;
+      }
+
+      return {
+        first: first,
+        start: start,
+        end: end,
+        last: last
+      };
+    };
+
+    me.getRowStart = function() {
+      var rowStart = page.number * page.rows;
+      if (rowStart < 0)
+        rowStart = 0;
+
+      return rowStart;
+    };
+
+    me.getRowEnd = function() {
+      var rowStart = me.getRowStart();
+      return Math.min(rowStart + me.rows, data.length);
+    };
+
+    me.getPaddingRows = function() {
+      var rowStart = me.getRowStart();
+      var rowEnd = me.getRowEnd();
+      return data.length > me.rows ? me.rows - (rowEnd - rowStart) : 0;
+    };
+  };
+
+  var Columns = function(data, columns, options) {
+    var me = this;
+
+    me.defaults = {
+      min: 5
+    };
+
+    me.number = 0;
+    me.visible = 0;
+    me.total = columns.length;
+    me.subset = [];
+    me.padding = 0;
+    me.min = options.columns.min !== null ? options.columns.min : me.defaults.min;
+    me.max = options.columns.max !== null ? options.columns.max : null;
+    me.widths = {};
+
+    var widthsLookAhead = Math.max(100, options.rows.min);
+    var paddingColChars = 10;
+
+    me.emptyNames = function() {
+      columns.forEach(function(column) {
+        if (columns.label !== null && columns.label !== "")
+          return false;
+      });
+
+      return true;
+    };
+
+    var parsePadding = function(value) {
+      return parseInt(value) >= 0 ? parseInt(value) : 0;
+    };
+
+    me.calculateWidths = function(measures) {
+      columns.forEach(function(column) {
+        var maxChars = Math.max(
+          column.label.toString().length,
+          column.type.toString().length
+        );
+
+        for (var idxRow = 0; idxRow < Math.min(widthsLookAhead, data.length); idxRow++) {
+          maxChars = Math.max(maxChars, data[idxRow][column.name.toString()].length);
+        }
+
+        me.widths[column.name] = {
+          // width in characters
+          chars: maxChars,
+          // width for the inner html columns
+          inner: maxChars * measures.character,
+          // width adding outer styles like padding
+          outer: maxChars * measures.character + measures.padding
+        };
+      });
+    };
+
+    me.getWidth = function() {
+      var widthOuter = 0;
+      for (var idxCol = 0; idxCol < me.subset.length; idxCol++) {
+        var columnName = me.subset[idxCol].name;
+        widthOuter = widthOuter + me.widths[columnName].outer;
+      }
+
+      widthOuter = widthOuter + me.padding * paddingColChars * measurer.measures.character;
+
+      if (me.hasMoreLeftColumns()) {
+        widthOuter = widthOuter + columnNavigationWidthPX + measurer.measures.padding;
+      }
+
+      if (me.hasMoreRightColumns()) {
+        widthOuter = widthOuter + columnNavigationWidthPX + measurer.measures.padding;
+      }
+
+      return widthOuter;
+    };
+
+    me.updateSlice = function() {
+      if (me.number + me.visible >= me.total)
+        me.number = me.total - me.visible;
+
+      if (me.number < 0) me.number = 0;
+
+      me.subset = columns.slice(me.number, Math.min(me.number + me.visible, me.total));
+
+      me.subset = me.subset.map(function(column) {
+        Object.keys(column).forEach(function(colKey) {
+          column[colKey] = column[colKey] === null ? "" : column[colKey].toString();
+        });
+
+        column.width = null;
+        return column;
+      });
+    };
+
+    me.setVisibleColumns = function(columnNumber, newVisibleColumns, paddingCount) {
+      me.number = columnNumber;
+      me.visible = newVisibleColumns;
+      me.padding = paddingCount;
+
+      me.updateSlice();
+    };
+
+    me.incColumnNumber = function(increment) {
+      me.number = me.number + increment;
+    };
+
+    me.setColumnNumber = function(newNumber) {
+      me.number = newNumber;
+    };
+
+    me.setPaddingCount = function(newPadding) {
+      me.padding = newPadding;
+    };
+
+    me.getPaddingCount = function() {
+      return me.padding;
+    };
+
+    me.hasMoreLeftColumns = function() {
+      return me.number > 0;
+    };
+
+    me.hasMoreRightColumns = function() {
+      return me.number + me.visible < me.total;
+    };
+
+    me.updateSlice(0);
+    return me;
+  };
+
+  var data = source.data;
+  var page = new Page(data, options);
+  var measurer = new Measurer(data, options);
+  var columns = new Columns(data, source.columns, options);
+
+  var table = null;
+  var tableDiv = null;
+  var header = null;
+  var footer = null;
+  var tbody = null;
+
+  // Caches pagedTable.clientWidth, specially for webkit
+  var cachedPagedTableClientWidth = null;
+
+  var onChangeCallbacks = [];
+
+  var clearSelection = function() {
+    if(document.selection && document.selection.empty) {
+      document.selection.empty();
+    } else if(window.getSelection) {
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+    }
+  };
+
+  var columnNavigationWidthPX = 5;
+
+  var renderColumnNavigation = function(increment, backwards) {
+    var arrow = document.createElement("div");
+    arrow.setAttribute("style",
+      "border-top: " + columnNavigationWidthPX + "px solid transparent;" +
+      "border-bottom: " + columnNavigationWidthPX + "px solid transparent;" +
+      "border-" + (backwards ? "right" : "left") + ": " + columnNavigationWidthPX + "px solid;");
+
+    var header = document.createElement("th");
+    header.appendChild(arrow);
+    header.setAttribute("style",
+      "cursor: pointer;" +
+      "vertical-align: middle;" +
+      "min-width: " + columnNavigationWidthPX + "px;" +
+      "width: " + columnNavigationWidthPX + "px;");
+
+    header.onclick = function() {
+      columns.incColumnNumber(backwards ? -1 : increment);
+
+      me.animateColumns(backwards);
+      renderFooter();
+
+      clearSelection();
+      triggerOnChange();
+    };
+
+    return header;
+  };
+
+  var maxColumnWidth = function(width) {
+    var padding = 80;
+    var columnMax = Math.max(cachedPagedTableClientWidth - padding, 0);
+
+    return parseInt(width) > 0 ?
+      Math.min(columnMax, parseInt(width)) + "px" :
+      columnMax + "px";
+  };
+
+  var clearHeader = function() {
+    var thead = pagedTable.querySelectorAll("thead")[0];
+    thead.innerHTML = "";
+  };
+
+  var renderHeader = function(clear) {
+    cachedPagedTableClientWidth = pagedTable.clientWidth;
+
+    var fragment = document.createDocumentFragment();
+
+    header = document.createElement("tr");
+    fragment.appendChild(header);
+
+    if (columns.number > 0)
+      header.appendChild(renderColumnNavigation(-columns.visible, true));
+
+    columns.subset = columns.subset.map(function(columnData) {
+      var column = document.createElement("th");
+      column.setAttribute("align", columnData.align);
+      column.style.textAlign = columnData.align;
+
+      column.style.maxWidth = maxColumnWidth(null);
+      if (columnData.width) {
+        column.style.minWidth =
+          column.style.maxWidth = maxColumnWidth(columnData.width);
+      }
+
+      var columnName = document.createElement("div");
+      columnName.setAttribute("class", "pagedtable-header-name");
+      if (columnData.label === "") {
+        columnName.innerHTML = "&nbsp;";
+      }
+      else {
+        columnName.appendChild(document.createTextNode(columnData.label));
+      }
+      column.appendChild(columnName);
+
+      var columnType = document.createElement("div");
+      columnType.setAttribute("class", "pagedtable-header-type");
+      if (columnData.type === "") {
+        columnType.innerHTML = "&nbsp;";
+      }
+      else {
+        columnType.appendChild(document.createTextNode("<" + columnData.type + ">"));
+      }
+      column.appendChild(columnType);
+
+      header.appendChild(column);
+
+      columnData.element = column;
+
+      return columnData;
+    });
+
+    for (var idx = 0; idx < columns.getPaddingCount(); idx++) {
+      var paddingCol = document.createElement("th");
+      paddingCol.setAttribute("class", "pagedtable-padding-col");
+      header.appendChild(paddingCol);
+    }
+
+    if (columns.number + columns.visible < columns.total)
+      header.appendChild(renderColumnNavigation(columns.visible, false));
+
+    if (typeof(clear) == "undefined" || clear) clearHeader();
+    var thead = pagedTable.querySelectorAll("thead")[0];
+    thead.appendChild(fragment);
+  };
+
+  me.animateColumns = function(backwards) {
+    var thead = pagedTable.querySelectorAll("thead")[0];
+
+    var headerOld = thead.querySelectorAll("tr")[0];
+    var tbodyOld = table.querySelectorAll("tbody")[0];
+
+    me.fitColumns(backwards);
+
+    renderHeader(false);
+
+    header.style.opacity = "0";
+    header.style.transform = backwards ? "translateX(-30px)" : "translateX(30px)";
+    header.style.transition = "transform 200ms linear, opacity 200ms";
+    header.style.transitionDelay = "0";
+
+    renderBody(false);
+
+    if (headerOld) {
+      headerOld.style.position = "absolute";
+      headerOld.style.transform = "translateX(0px)";
+      headerOld.style.opacity = "1";
+      headerOld.style.transition = "transform 100ms linear, opacity 100ms";
+      headerOld.setAttribute("class", "pagedtable-remove-head");
+      if (headerOld.style.transitionEnd) {
+        headerOld.addEventListener("transitionend", function() {
+          var headerOldByClass = thead.querySelector(".pagedtable-remove-head");
+          if (headerOldByClass) thead.removeChild(headerOldByClass);
+        });
+      }
+      else {
+        thead.removeChild(headerOld);
+      }
+    }
+
+    if (tbodyOld) table.removeChild(tbodyOld);
+
+    tbody.style.opacity = "0";
+    tbody.style.transition = "transform 200ms linear, opacity 200ms";
+    tbody.style.transitionDelay = "0ms";
+
+    // force relayout
+    window.getComputedStyle(header).opacity;
+    window.getComputedStyle(tbody).opacity;
+
+    if (headerOld) {
+      headerOld.style.transform = backwards ? "translateX(20px)" : "translateX(-30px)";
+      headerOld.style.opacity = "0";
+    }
+
+    header.style.transform = "translateX(0px)";
+    header.style.opacity = "1";
+
+    tbody.style.opacity = "1";
+  }
+
+  me.onChange = function(callback) {
+    onChangeCallbacks.push(callback);
+  };
+
+  var triggerOnChange = function() {
+    onChangeCallbacks.forEach(function(onChange) {
+      onChange();
+    });
+  };
+
+  var clearBody = function() {
+    if (tbody) {
+      table.removeChild(tbody);
+      tbody = null;
+    }
+  };
+
+  var renderBody = function(clear) {
+    cachedPagedTableClientWidth = pagedTable.clientWidth
+
+    var fragment = document.createDocumentFragment();
+
+    var pageData = data.slice(page.getRowStart(), page.getRowEnd());
+
+    pageData.forEach(function(dataRow, idxRow) {
+      var htmlRow = document.createElement("tr");
+      htmlRow.setAttribute("class", (idxRow % 2 !==0) ? "even" : "odd");
+
+      if (columns.hasMoreLeftColumns())
+        htmlRow.appendChild(document.createElement("td"));
+
+      columns.subset.forEach(function(columnData) {
+        var cellName = columnData.name;
+        var dataCell = dataRow[cellName];
+        var htmlCell = document.createElement("td");
+
+        if (dataCell === "NA") htmlCell.setAttribute("class", "pagedtable-na-cell");
+        if (dataCell === "__NA__") dataCell = "NA";
+
+        var cellText = document.createTextNode(dataCell);
+        htmlCell.appendChild(cellText);
+        if (dataCell.length > 50) {
+          htmlCell.setAttribute("title", dataCell);
+        }
+        htmlCell.setAttribute("align", columnData.align);
+        htmlCell.style.textAlign = columnData.align;
+        htmlCell.style.maxWidth = maxColumnWidth(null);
+        if (columnData.width) {
+          htmlCell.style.minWidth = htmlCell.style.maxWidth = maxColumnWidth(columnData.width);
+        }
+        htmlRow.appendChild(htmlCell);
+      });
+
+      for (var idx = 0; idx < columns.getPaddingCount(); idx++) {
+        var paddingCol = document.createElement("td");
+        paddingCol.setAttribute("class", "pagedtable-padding-col");
+        htmlRow.appendChild(paddingCol);
+      }
+
+      if (columns.hasMoreRightColumns())
+        htmlRow.appendChild(document.createElement("td"));
+
+      fragment.appendChild(htmlRow);
+    });
+
+    for (var idxPadding = 0; idxPadding < page.getPaddingRows(); idxPadding++) {
+      var paddingRow = document.createElement("tr");
+
+      var paddingCellRow = document.createElement("td");
+      paddingCellRow.innerHTML = "&nbsp;";
+      paddingCellRow.setAttribute("colspan", "100%");
+      paddingRow.appendChild(paddingCellRow);
+
+      fragment.appendChild(paddingRow);
+    }
+
+    if (typeof(clear) == "undefined" || clear) clearBody();
+    tbody = document.createElement("tbody");
+    tbody.appendChild(fragment);
+
+    table.appendChild(tbody);
+  };
+
+  var getLabelInfo = function() {
+    var pageStart = page.getRowStart();
+    var pageEnd = page.getRowEnd();
+    var totalRows = data.length;
+
+    var totalRowsLabel = options.rows.total ? options.rows.total : totalRows;
+    var totalRowsLabelFormat = totalRowsLabel.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
+
+    var infoText = (pageStart + 1) + "-" + pageEnd + " of " + totalRowsLabelFormat + " rows";
+    if (totalRows < page.rows) {
+      infoText = totalRowsLabel + " row" + (totalRows != 1 ? "s" : "");
+    }
+    if (columns.total > columns.visible) {
+      var totalColumnsLabel = options.columns.total ? options.columns.total : columns.total;
+
+      infoText = infoText + " | " + (columns.number + 1) + "-" +
+        (Math.min(columns.number + columns.visible, columns.total)) +
+        " of " + totalColumnsLabel + " columns";
+    }
+
+    return infoText;
+  };
+
+  var clearFooter = function() {
+    footer = pagedTable.querySelectorAll("div.pagedtable-footer")[0];
+    footer.innerHTML = "";
+
+    return footer;
+  };
+
+  var createPageLink = function(idxPage) {
+    var pageLink = document.createElement("a");
+    pageLinkClass = idxPage === page.number ? "pagedtable-index pagedtable-index-current" : "pagedtable-index";
+    pageLink.setAttribute("class", pageLinkClass);
+    pageLink.setAttribute("data-page-index", idxPage);
+    pageLink.onclick = function() {
+      page.setPageNumber(parseInt(this.getAttribute("data-page-index")));
+      renderBody();
+      renderFooter();
+
+      triggerOnChange();
+    };
+
+    pageLink.appendChild(document.createTextNode(idxPage + 1));
+
+    return pageLink;
+  }
+
+  var renderFooter = function() {
+    footer = clearFooter();
+
+    var next = document.createElement("a");
+    next.appendChild(document.createTextNode("Next"));
+    next.onclick = function() {
+      page.setPageNumber(page.number + 1);
+      renderBody();
+      renderFooter();
+
+      triggerOnChange();
+    };
+    if (data.length > page.rows) footer.appendChild(next);
+
+    var pageNumbers = document.createElement("div");
+    pageNumbers.setAttribute("class", "pagedtable-indexes");
+
+    var pageRange = page.getVisiblePageRange();
+
+    if (pageRange.first) {
+      var pageLink = createPageLink(0);
+      pageNumbers.appendChild(pageLink);
+
+      var pageSeparator = document.createElement("div");
+      pageSeparator.setAttribute("class", "pagedtable-index-separator-left");
+      pageSeparator.appendChild(document.createTextNode("..."))
+      pageNumbers.appendChild(pageSeparator);
+    }
+
+    for (var idxPage = pageRange.start; idxPage < pageRange.end; idxPage++) {
+      var pageLink = createPageLink(idxPage);
+
+      pageNumbers.appendChild(pageLink);
+    }
+
+    if (pageRange.last) {
+      var pageSeparator = document.createElement("div");
+      pageSeparator.setAttribute("class", "pagedtable-index-separator-right");
+      pageSeparator.appendChild(document.createTextNode("..."))
+      pageNumbers.appendChild(pageSeparator);
+
+      var pageLink = createPageLink(page.total - 1);
+      pageNumbers.appendChild(pageLink);
+    }
+
+    if (data.length > page.rows) footer.appendChild(pageNumbers);
+
+    var previous = document.createElement("a");
+    previous.appendChild(document.createTextNode("Previous"));
+    previous.onclick = function() {
+      page.setPageNumber(page.number - 1);
+      renderBody();
+      renderFooter();
+
+      triggerOnChange();
+    };
+    if (data.length > page.rows) footer.appendChild(previous);
+
+    var infoLabel = document.createElement("div");
+    infoLabel.setAttribute("class", "pagedtable-info");
+    infoLabel.setAttribute("title", getLabelInfo());
+    infoLabel.appendChild(document.createTextNode(getLabelInfo()));
+    footer.appendChild(infoLabel);
+
+    var enabledClass = "pagedtable-index-nav";
+    var disabledClass = "pagedtable-index-nav pagedtable-index-nav-disabled";
+    previous.setAttribute("class", page.number <= 0 ? disabledClass : enabledClass);
+    next.setAttribute("class", (page.number + 1) * page.rows >= data.length ? disabledClass : enabledClass);
+  };
+
+  var measuresCell = null;
+
+  var renderMeasures = function() {
+    var measuresTable = document.createElement("table");
+    measuresTable.style.visibility = "hidden";
+    measuresTable.style.position = "absolute";
+    measuresTable.style.whiteSpace = "nowrap";
+    measuresTable.style.height = "auto";
+    measuresTable.style.width = "auto";
+
+    var measuresRow = document.createElement("tr");
+    measuresTable.appendChild(measuresRow);
+
+    measuresCell = document.createElement("td");
+    var sampleString = "ABCDEFGHIJ0123456789";
+    measuresCell.appendChild(document.createTextNode(sampleString));
+
+    measuresRow.appendChild(measuresCell);
+
+    tableDiv.appendChild(measuresTable);
+  }
+
+  me.init = function() {
+    tableDiv = document.createElement("div");
+    pagedTable.appendChild(tableDiv);
+    var pagedTableClass = data.length > 0 ?
+      "pagedtable pagedtable-not-empty" :
+      "pagedtable pagedtable-empty";
+
+    if (columns.total == 0 || (columns.emptyNames() && data.length == 0)) {
+      pagedTableClass = pagedTableClass + " pagedtable-empty-columns";
+    }
+
+    tableDiv.setAttribute("class", pagedTableClass);
+
+    renderMeasures();
+    measurer.calculate(measuresCell);
+    columns.calculateWidths(measurer.measures);
+
+    table = document.createElement("table");
+    table.setAttribute("cellspacing", "0");
+    table.setAttribute("class", "table table-condensed");
+    tableDiv.appendChild(table);
+
+    table.appendChild(document.createElement("thead"));
+
+    var footerDiv = document.createElement("div");
+    footerDiv.setAttribute("class", "pagedtable-footer");
+    tableDiv.appendChild(footerDiv);
+
+    // if the host has not yet provided horizontal space, render hidden
+    if (tableDiv.clientWidth <= 0) {
+      tableDiv.style.opacity = "0";
+    }
+
+    me.render();
+
+    // retry seizing columns later if the host has not provided space
+    function retryFit() {
+      if (tableDiv.clientWidth <= 0) {
+        setTimeout(retryFit, 100);
+      } else {
+        me.render();
+        triggerOnChange();
+      }
+    }
+    if (tableDiv.clientWidth <= 0) {
+      retryFit();
+    }
+  };
+
+  var registerWidths = function() {
+    columns.subset = columns.subset.map(function(column) {
+      column.width = columns.widths[column.name].inner;
+      return column;
+    });
+  };
+
+  var parsePadding = function(value) {
+    return parseInt(value) >= 0 ? parseInt(value) : 0;
+  };
+
+  me.fixedHeight = function() {
+    return options.rows.max != null;
+  }
+
+  me.fitRows = function() {
+    if (me.fixedHeight())
+      return;
+
+    measurer.calculate(measuresCell);
+
+    var rows = options.rows.min !== null ? options.rows.min : 0;
+    var headerHeight = header !== null && header.offsetHeight > 0 ? header.offsetHeight : 0;
+    var footerHeight = footer !== null && footer.offsetHeight > 0 ? footer.offsetHeight : 0;
+
+    if (pagedTable.offsetHeight > 0) {
+      var availableHeight = pagedTable.offsetHeight - headerHeight - footerHeight;
+      rows = Math.floor((availableHeight) / measurer.measures.height);
+    }
+
+    rows = options.rows.min !== null ? Math.max(options.rows.min, rows) : rows;
+
+    page.setRows(rows);
+  }
+
+  // The goal of this function is to add as many columns as possible
+  // starting from left-to-right, when the right most limit is reached
+  // it tries to add columns from the left as well.
+  //
+  // When startBackwards is true columns are added from right-to-left
+  me.fitColumns = function(startBackwards) {
+    measurer.calculate(measuresCell);
+    columns.calculateWidths(measurer.measures);
+
+    if (tableDiv.clientWidth > 0) {
+      tableDiv.style.opacity = 1;
+    }
+
+    var visibleColumns = tableDiv.clientWidth <= 0 ? Math.max(columns.min, 1) : 1;
+    var columnNumber = columns.number;
+    var paddingCount = 0;
+
+    // track a list of added columns as we build the visible ones to allow us
+    // to remove columns when they don't fit anymore.
+    var columnHistory = [];
+
+    var lastTableHeight = 0;
+    var backwards = startBackwards;
+
+    var tableDivStyle = window.getComputedStyle(tableDiv, null);
+    var tableDivPadding = parsePadding(tableDivStyle.paddingLeft) +
+      parsePadding(tableDivStyle.paddingRight);
+
+    var addPaddingCol = false;
+    var currentWidth = 0;
+
+    while (true) {
+      columns.setVisibleColumns(columnNumber, visibleColumns, paddingCount);
+      currentWidth = columns.getWidth();
+
+      if (tableDiv.clientWidth - tableDivPadding < currentWidth) {
+        break;
+      }
+
+      columnHistory.push({
+        columnNumber: columnNumber,
+        visibleColumns: visibleColumns,
+        paddingCount: paddingCount
+      });
+
+      if (columnHistory.length > 100) {
+        console.error("More than 100 tries to fit columns, aborting");
+        break;
+      }
+
+      if (columns.max !== null &&
+        columns.visible + columns.getPaddingCount() >= columns.max) {
+        break;
+      }
+
+      // if we run out of right-columns
+      if (!backwards && columnNumber + columns.visible >= columns.total) {
+        // if we started adding right-columns, try adding left-columns
+        if (!startBackwards && columnNumber > 0) {
+          backwards = true;
+        }
+        else if (columns.min === null || visibleColumns + columns.getPaddingCount() >= columns.min) {
+          break;
+        }
+        else {
+          paddingCount = paddingCount + 1;
+        }
+      }
+
+      // if we run out of left-columns
+      if (backwards && columnNumber == 0) {
+        // if we started adding left-columns, try adding right-columns
+        if (startBackwards && columnNumber + columns.visible < columns.total) {
+          backwards = false;
+        }
+        else if (columns.min === null || visibleColumns + columns.getPaddingCount() >= columns.min) {
+          break;
+        }
+        else {
+          paddingCount = paddingCount + 1;
+        }
+      }
+
+      // when moving backwards try fitting left columns first
+      if (backwards && columnNumber > 0) {
+        columnNumber = columnNumber - 1;
+      }
+
+      if (columnNumber + visibleColumns < columns.total) {
+        visibleColumns = visibleColumns + 1;
+      }
+    }
+
+    var lastRenderableColumn = {
+        columnNumber: columnNumber,
+        visibleColumns: visibleColumns,
+        paddingCount: paddingCount
+    };
+
+    if (columnHistory.length > 0) {
+      lastRenderableColumn = columnHistory[columnHistory.length - 1];
+    }
+
+    columns.setVisibleColumns(
+      lastRenderableColumn.columnNumber,
+      lastRenderableColumn.visibleColumns,
+      lastRenderableColumn.paddingCount);
+
+    if (pagedTable.offsetWidth > 0) {
+      page.setVisiblePages(Math.max(Math.ceil(1.0 * (pagedTable.offsetWidth - 250) / 40), 2));
+    }
+
+    registerWidths();
+  };
+
+  me.fit = function(startBackwards) {
+    me.fitRows();
+    me.fitColumns(startBackwards);
+  }
+
+  me.render = function() {
+    me.fitColumns(false);
+
+    // render header/footer to measure height accurately
+    renderHeader();
+    renderFooter();
+
+    me.fitRows();
+    renderBody();
+
+    // re-render footer to match new rows
+    renderFooter();
+  }
+
+  var resizeLastWidth = -1;
+  var resizeLastHeight = -1;
+  var resizeNewWidth = -1;
+  var resizeNewHeight = -1;
+  var resizePending = false;
+
+  me.resize = function(newWidth, newHeight) {
+
+    function resizeDelayed() {
+      resizePending = false;
+
+      if (
+        (resizeNewWidth !== resizeLastWidth) ||
+        (!me.fixedHeight() && resizeNewHeight !== resizeLastHeight)
+      ) {
+        resizeLastWidth = resizeNewWidth;
+        resizeLastHeight = resizeNewHeight;
+
+        setTimeout(resizeDelayed, 200);
+        resizePending = true;
+      } else {
+        me.render();
+        triggerOnChange();
+
+        resizeLastWidth = -1;
+        resizeLastHeight = -1;
+      }
+    }
+
+    resizeNewWidth = newWidth;
+    resizeNewHeight = newHeight;
+
+    if (!resizePending) resizeDelayed();
+  };
+};
+
+var PagedTableDoc;
+(function (PagedTableDoc) {
+  var allPagedTables = [];
+
+  PagedTableDoc.initAll = function() {
+    allPagedTables = [];
+
+    var pagedTables = [].slice.call(document.querySelectorAll('[data-pagedtable="false"],[data-pagedtable=""]'));
+    pagedTables.forEach(function(pagedTable, idx) {
+      pagedTable.setAttribute("data-pagedtable", "true");
+      pagedTable.setAttribute("pagedtable-page", 0);
+      pagedTable.setAttribute("class", "pagedtable-wrapper");
+
+      var pagedTableInstance = new PagedTable(pagedTable);
+      pagedTableInstance.init();
+
+      allPagedTables.push(pagedTableInstance);
+    });
+  };
+
+  PagedTableDoc.resizeAll = function() {
+    allPagedTables.forEach(function(pagedTable) {
+      pagedTable.render();
+    });
+  };
+
+  window.addEventListener("resize", PagedTableDoc.resizeAll);
+
+  return PagedTableDoc;
+})(PagedTableDoc || (PagedTableDoc = {}));
+
+window.onload = function() {
+  PagedTableDoc.initAll();
+};
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to the <code>ir</code>class</h1>
+<h4 class="author">Henning Teickner</h4>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<div id="purpose" class="section level2">
+<h2>Purpose</h2>
+<p>The purpose of this vignette is to describe the structure and methods of objects of class <code>ir</code>. <code>ir</code> objects are used by the ‘ir’ package to store spectra and their metadata. This vignette could be helpful if you want to understand better how the ‘ir’ package works, how to handle metadata, how to manipulate <code>ir</code> objects, or if you want to construct a subclass based on the <code>ir</code>class.</p>
+<p>This vignette does not give an overview on how to use the ‘ir’ package, on functions for spectral preprocessing, and on how to plot <code>ir</code> objects. For this, see vignette <a href="ir-introduction.html">Introduction to the ‘ir’ package</a>.</p>
+</div>
+<div id="structure" class="section level2">
+<h2>Structure</h2>
+<p>This vignette has three parts:</p>
+<ol style="list-style-type: decimal">
+<li>The <code>ir</code> class</li>
+<li>Subsetting and modifying <code>ir</code> objects</li>
+<li>Special functions to manipulate <code>ir objects</code></li>
+</ol>
+<p>In part <a href="#the-ir-class">The <code>ir</code> class</a>, I will describe the structure of <code>ir</code> objects and list available methods for it.</p>
+<p>In part <a href="#subsetting-and-modifying-ir-objects">Subsetting and modifying <code>ir</code> objects</a>, I will show how <code>ir</code> objects can be subsetted and modified (including tidyverse functions).</p>
+<p>In part <a href="#special-functions-to-manipulate-ir-objects">Special functions to manipulate <code>ir objects</code></a>, I will present some more specialized functions to manipulate the data in <code>ir</code> objects (including the spectra).</p>
+</div>
+<div id="preparation" class="section level2">
+<h2>Preparation</h2>
+<p>To follow this vignette, you have to install the ‘ir’ package as described in the Readme file and you have to load it:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(ir)</span></code></pre></div>
+</div>
+</div>
+<div id="the-ir-class" class="section level1">
+<h1>The <code>ir</code> class</h1>
+<p>Objects of class <code>ir</code> are in principle data frames (or <code>tibble</code>s):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>ir_sample_data</span></code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["id_measurement"],"name":[1],"type":["int"],"align":["right"]},{"label":["id_sample"],"name":[2],"type":["chr"],"align":["left"]},{"label":["sample_type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["sample_comment"],"name":[4],"type":["chr"],"align":["left"]},{"label":["klason_lignin"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["holocellulose"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["spectra"],"name":[7],"type":["named list"],"align":["right"]}],"data":[{"1":"1","2":"GN 11-389","3":"needles","4":"Abies Firma Momi fir","5":"0.3599440","6":"0.3084","7":"<tibble[,2]>"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.3394050","6":"0.2497","7":"<tibble[,2]>"},{"1":"3","2":"GN 11-407","3":"needles","4":"Juniperus chinensis Chinese juniper","5":"0.2675520","6":"0.3362","7":"<tibble[,2]>"},{"1":"4","2":"GN 11-411","3":"needles","4":"Metasequoia glyptostroboides Dawn redwood","5":"0.3500160","6":"0.1844","7":"<tibble[,2]>"},{"1":"5","2":"GN 11-416","3":"needles","4":"Pinus strobus Torulosa","5":"0.3311000","6":"0.3092","7":"<tibble[,2]>"},{"1":"6","2":"GN 11-419","3":"needles","4":"Pseudolarix amabili Golden Larch","5":"0.2793600","6":"0.3355","7":"<tibble[,2]>"},{"1":"7","2":"GN 11-422","3":"needles","4":"Sequoia sempervirens California redwood","5":"0.3296720","6":"0.2408","7":"<tibble[,2]>"},{"1":"8","2":"GN 11-423","3":"needles","4":"Taxodium distichum Cascade Falls","5":"0.3569500","6":"0.1253","7":"<tibble[,2]>"},{"1":"9","2":"GN 11-428","3":"needles","4":"Thuja occidentalis Eastern Arborvitae","5":"0.3693600","6":"0.2517","7":"<tibble[,2]>"},{"1":"10","2":"GN 11-434","3":"needles","4":"Tsuga caroliniana Carolina Hemlock","5":"0.2890500","6":"0.3487","7":"<tibble[,2]>"},{"1":"11","2":"GN 11-435","3":"needles","4":"Picea abies Norway Spruce","5":"0.2880000","6":"0.3214","7":"<tibble[,2]>"},{"1":"12","2":"GN 11-460","3":"needles","4":"Pinus taeda Loblolly pine","5":"0.3223000","6":"0.3292","7":"<tibble[,2]>"},{"1":"13","2":"HW 07-151","3":"hardwood","4":"Quercus sp. Red oak (from local lumber yard)","5":"0.2380950","6":"0.6010","7":"<tibble[,2]>"},{"1":"14","2":"HW 11-137","3":"hardwood","4":"Acer saccharum Sugar maple","5":"0.2425920","6":"0.5169","7":"<tibble[,2]>"},{"1":"15","2":"HW 11-144","3":"hardwood","4":"Fraxinus americana White ash","5":"0.2592240","6":"0.5212","7":"<tibble[,2]>"},{"1":"16","2":"HW 11-146","3":"hardwood","4":"Aesculus octandra Buckeye","5":"0.2331840","6":"0.4136","7":"<tibble[,2]>"},{"1":"17","2":"HW 11-148","3":"hardwood","4":"Ailanthus altissima Tree of Heaven","5":"0.1581200","6":"0.6254","7":"<tibble[,2]>"},{"1":"18","2":"HW 11-149","3":"hardwood","4":"Salix nigra Black willow","5":"0.1999570","6":"0.5891","7":"<tibble[,2]>"},{"1":"19","2":"HW 11-172","3":"hardwood","4":"Quercus viginiana Live oak","5":"0.2822950","6":"0.4651","7":"<tibble[,2]>"},{"1":"20","2":"HW 11-173","3":"hardwood","4":"Populus alba White Poplar","5":"0.1864270","6":"0.5889","7":"<tibble[,2]>"},{"1":"21","2":"HW 11-176","3":"hardwood","4":"Quercus rubra red oak","5":"0.2189460","6":"0.5513","7":"<tibble[,2]>"},{"1":"22","2":"HW 11-179","3":"hardwood","4":"Betula papyrifera Paper birch","5":"0.1713960","6":"0.6067","7":"<tibble[,2]>"},{"1":"23","2":"HW 11-184","3":"hardwood","4":"Acer rubrum red maple","5":"0.2251480","6":"0.5811","7":"<tibble[,2]>"},{"1":"24","2":"LG 09-384","3":"leaves and grasses","4":"","5":"0.1274308","6":"0.3670","7":"<tibble[,2]>"},{"1":"25","2":"LG 11-309","3":"leaves and grasses","4":"Betula nigra Red birch","5":"0.3292350","6":"0.2214","7":"<tibble[,2]>"},{"1":"26","2":"LG 11-393","3":"leaves and grasses","4":"Camelia japonica white by the gate","5":"0.2593800","6":"0.2077","7":"<tibble[,2]>"},{"1":"27","2":"LG 11-395","3":"leaves and grasses","4":"Carpitus betulus European Hornbeam","5":"0.2234680","6":"0.2532","7":"<tibble[,2]>"},{"1":"28","2":"LG 11-397","3":"leaves and grasses","4":"Clethra alnifolia Sweet pepperbrush","5":"0.3888840","6":"0.1891","7":"<tibble[,2]>"},{"1":"29","2":"LG 11-404","3":"leaves and grasses","4":"Ilex calina Carolina holly","5":"0.2713620","6":"0.2570","7":"<tibble[,2]>"},{"1":"30","2":"LG 11-412","3":"leaves and grasses","4":"Miscanthus sinensis Maiden grass","5":"0.1783770","6":"0.5355","7":"<tibble[,2]>"},{"1":"31","2":"LG 11-414","3":"leaves and grasses","4":"Nyssa sylvatica Black tupelo","5":"0.2188790","6":"0.2035","7":"<tibble[,2]>"},{"1":"32","2":"LG 11-418","3":"leaves and grasses","4":"Prunus incisa Fuji cherry","5":"0.3258500","6":"0.1545","7":"<tibble[,2]>"},{"1":"33","2":"LG 11-432","3":"leaves and grasses","4":"Acer rubrum red maple","5":"0.2387520","6":"0.1756","7":"<tibble[,2]>"},{"1":"34","2":"LG 11-433","3":"leaves and grasses","4":"Cornus florida Flowering dogwood","5":"0.1807650","6":"0.2134","7":"<tibble[,2]>"},{"1":"35","2":"LG 11-438","3":"leaves and grasses","4":"Eremochloa ophiuroides Centipede grass","5":"0.1691550","6":"0.4941","7":"<tibble[,2]>"},{"1":"36","2":"LG 11-461","3":"leaves and grasses","4":"Quercus viginiana Live oak","5":"0.3175320","6":"0.2568","7":"<tibble[,2]>"},{"1":"37","2":"SW 11-138","3":"softwood","4":"Tsuga heterophyla Western hemlock","5":"0.3471160","6":"0.4733","7":"<tibble[,2]>"},{"1":"38","2":"SW 11-139","3":"softwood","4":"Pinus monticola Western white pine","5":"0.2749050","6":"0.5444","7":"<tibble[,2]>"},{"1":"39","2":"SW 11-154","3":"softwood","4":"Pinus strobus Eastern white pine","5":"0.3117600","6":"0.5270","7":"<tibble[,2]>"},{"1":"40","2":"SW 11-158","3":"softwood","4":"Pinus taeda Loblolly pine","5":"0.2747150","6":"0.5659","7":"<tibble[,2]>"},{"1":"41","2":"SW 11-178","3":"softwood","4":"Tsuga caroliniana Carolina Hemlock","5":"0.3458700","6":"0.4591","7":"<tibble[,2]>"},{"1":"42","2":"OCC 11-457","3":"old corrugated cardboard","4":"OCC 1","5":"0.1018600","6":"0.7709","7":"<tibble[,2]>"},{"1":"43","2":"OCC 11-462","3":"old corrugated cardboard","4":"OCC 3","5":"0.1418180","6":"0.7575","7":"<tibble[,2]>"},{"1":"44","2":"OCC 11-463","3":"old corrugated cardboard","4":"OCC 2","5":"0.1373680","6":"0.7182","7":"<tibble[,2]>"},{"1":"45","2":"OMG 08-82","3":"old magazines","4":"Australia Paper","5":"0.1957380","6":"0.4635","7":"<tibble[,2]>"},{"1":"46","2":"OMG 11-454","3":"old magazines","4":"ESPN Magazine dated Sept 2011","5":"0.1935360","6":"0.4760","7":"<tibble[,2]>"},{"1":"47","2":"OMG 11-455","3":"old magazines","4":"W Magazine dated Sept 2011","5":"0.1457610","6":"0.4899","7":"<tibble[,2]>"},{"1":"48","2":"OMG 11-456","3":"old magazines","4":"CPU Magazine","5":"0.1066450","6":"0.5913","7":"<tibble[,2]>"},{"1":"49","2":"ONP 08-78","3":"old newsprint","4":"Australia Paper","5":"0.2407860","6":"0.6320","7":"<tibble[,2]>"},{"1":"50","2":"ONP 09-388","3":"old newsprint","4":"Eleazer 1997 sample","5":"0.2389940","6":"0.5750","7":"<tibble[,2]>"},{"1":"51","2":"ONP 11-450","3":"old newsprint","4":"News and Observer dated Aug 2011","5":"0.1634850","6":"0.6952","7":"<tibble[,2]>"},{"1":"52","2":"ONP 11-451","3":"old newsprint","4":"Houston Chronicle dated Sept 2011","5":"0.2404920","6":"0.5977","7":"<tibble[,2]>"},{"1":"53","2":"ONP 11-458","3":"old newsprint","4":"Indianapolis star","5":"0.2884200","6":"0.5716","7":"<tibble[,2]>"},{"1":"54","2":"ONP 11-459","3":"old newsprint","4":"Los Angeles Times","5":"0.1952280","6":"0.6503","7":"<tibble[,2]>"},{"1":"55","2":"OFF 10-506","3":"office paper","4":"","5":"0.2035740","6":"0.7254","7":"<tibble[,2]>"},{"1":"56","2":"OFF 13-144","3":"office paper","4":"","5":"0.3184510","6":"0.7362","7":"<tibble[,2]>"},{"1":"57","2":"OFF 08-80","3":"office paper","4":"","5":"0.5624500","6":"0.7268","7":"<tibble[,2]>"},{"1":"58","2":"OFF 08-852","3":"office paper","4":"","5":"0.0542300","6":"0.7007","7":"<tibble[,2]>"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>Each row represents one measurement for a spectrum. The <code>ir</code> object must a column <code>spectra</code> which is a list of data frames, each element representing a spectrum.</p>
+<p>Besides this, <code>ir</code> objects may have additional columns with metadata. This is useful to analyze spectra of samples in an integrated way with other data, for example nitrogen content (see part <a href="#subsetting-and-modifying-ir-objects">Subsetting and modifying <code>ir</code> objects</a>).</p>
+<p>The <code>spectra</code> column is a list of data frames, each element representing a spectrum. The data frames have a row for each intensity values measured for a spectral channel (“x axis value”, e.g. wavenumber) and a column <code>x</code> storing the wavenumber values and a column <code>y</code> storing the respective intensity values. No additional columns are allowed:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">head</span>(ir_sample_data<span class="op">$</span>spectra[[<span class="dv">1</span>]])</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="co">#&gt; # A tibble: 6 x 2</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="co">#&gt;       x        y</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt;   &lt;int&gt;    &lt;dbl&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; 1  4000 0.000361</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt; 2  3999 0.000431</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt; 3  3998 0.000501</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; 4  3997 0.000571</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt; 5  3996 0.000667</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt; 6  3995 0.000704</span></span></code></pre></div>
+<p>If there is no spectrum available for a sample, an empty data frame is a placeholder:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>d &lt;-<span class="st"> </span>ir_sample_data</span>
+<span id="cb4-2"><a href="#cb4-2"></a>d<span class="op">$</span>spectra[[<span class="dv">1</span>]] &lt;-<span class="st"> </span>d<span class="op">$</span>spectra[[<span class="dv">1</span>]][<span class="dv">0</span>, ]</span>
+<span id="cb4-3"><a href="#cb4-3"></a>d<span class="op">$</span>spectra[[<span class="dv">1</span>]]</span>
+<span id="cb4-4"><a href="#cb4-4"></a></span>
+<span id="cb4-5"><a href="#cb4-5"></a><span class="kw">ir_normalize</span>(d, <span class="dt">method =</span> <span class="st">&quot;area&quot;</span>)</span></code></pre></div>
+<pre><code>#&gt; # A tibble: 0 x 2
+#&gt; # ... with 2 variables: x &lt;int&gt;, y &lt;dbl&gt;</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["id_measurement"],"name":[1],"type":["int"],"align":["right"]},{"label":["id_sample"],"name":[2],"type":["chr"],"align":["left"]},{"label":["sample_type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["sample_comment"],"name":[4],"type":["chr"],"align":["left"]},{"label":["klason_lignin"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["holocellulose"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["spectra"],"name":[7],"type":["named list"],"align":["right"]}],"data":[{"1":"1","2":"GN 11-389","3":"needles","4":"Abies Firma Momi fir","5":"0.3599440","6":"0.3084","7":"<tibble[,2]>","_rn_":"1"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.3394050","6":"0.2497","7":"<tibble[,2]>","_rn_":"2"},{"1":"3","2":"GN 11-407","3":"needles","4":"Juniperus chinensis Chinese juniper","5":"0.2675520","6":"0.3362","7":"<tibble[,2]>","_rn_":"3"},{"1":"4","2":"GN 11-411","3":"needles","4":"Metasequoia glyptostroboides Dawn redwood","5":"0.3500160","6":"0.1844","7":"<tibble[,2]>","_rn_":"4"},{"1":"5","2":"GN 11-416","3":"needles","4":"Pinus strobus Torulosa","5":"0.3311000","6":"0.3092","7":"<tibble[,2]>","_rn_":"5"},{"1":"6","2":"GN 11-419","3":"needles","4":"Pseudolarix amabili Golden Larch","5":"0.2793600","6":"0.3355","7":"<tibble[,2]>","_rn_":"6"},{"1":"7","2":"GN 11-422","3":"needles","4":"Sequoia sempervirens California redwood","5":"0.3296720","6":"0.2408","7":"<tibble[,2]>","_rn_":"7"},{"1":"8","2":"GN 11-423","3":"needles","4":"Taxodium distichum Cascade Falls","5":"0.3569500","6":"0.1253","7":"<tibble[,2]>","_rn_":"8"},{"1":"9","2":"GN 11-428","3":"needles","4":"Thuja occidentalis Eastern Arborvitae","5":"0.3693600","6":"0.2517","7":"<tibble[,2]>","_rn_":"9"},{"1":"10","2":"GN 11-434","3":"needles","4":"Tsuga caroliniana Carolina Hemlock","5":"0.2890500","6":"0.3487","7":"<tibble[,2]>","_rn_":"10"},{"1":"11","2":"GN 11-435","3":"needles","4":"Picea abies Norway Spruce","5":"0.2880000","6":"0.3214","7":"<tibble[,2]>","_rn_":"11"},{"1":"12","2":"GN 11-460","3":"needles","4":"Pinus taeda Loblolly pine","5":"0.3223000","6":"0.3292","7":"<tibble[,2]>","_rn_":"12"},{"1":"13","2":"HW 07-151","3":"hardwood","4":"Quercus sp. Red oak (from local lumber yard)","5":"0.2380950","6":"0.6010","7":"<tibble[,2]>","_rn_":"13"},{"1":"14","2":"HW 11-137","3":"hardwood","4":"Acer saccharum Sugar maple","5":"0.2425920","6":"0.5169","7":"<tibble[,2]>","_rn_":"14"},{"1":"15","2":"HW 11-144","3":"hardwood","4":"Fraxinus americana White ash","5":"0.2592240","6":"0.5212","7":"<tibble[,2]>","_rn_":"15"},{"1":"16","2":"HW 11-146","3":"hardwood","4":"Aesculus octandra Buckeye","5":"0.2331840","6":"0.4136","7":"<tibble[,2]>","_rn_":"16"},{"1":"17","2":"HW 11-148","3":"hardwood","4":"Ailanthus altissima Tree of Heaven","5":"0.1581200","6":"0.6254","7":"<tibble[,2]>","_rn_":"17"},{"1":"18","2":"HW 11-149","3":"hardwood","4":"Salix nigra Black willow","5":"0.1999570","6":"0.5891","7":"<tibble[,2]>","_rn_":"18"},{"1":"19","2":"HW 11-172","3":"hardwood","4":"Quercus viginiana Live oak","5":"0.2822950","6":"0.4651","7":"<tibble[,2]>","_rn_":"19"},{"1":"20","2":"HW 11-173","3":"hardwood","4":"Populus alba White Poplar","5":"0.1864270","6":"0.5889","7":"<tibble[,2]>","_rn_":"20"},{"1":"21","2":"HW 11-176","3":"hardwood","4":"Quercus rubra red oak","5":"0.2189460","6":"0.5513","7":"<tibble[,2]>","_rn_":"21"},{"1":"22","2":"HW 11-179","3":"hardwood","4":"Betula papyrifera Paper birch","5":"0.1713960","6":"0.6067","7":"<tibble[,2]>","_rn_":"22"},{"1":"23","2":"HW 11-184","3":"hardwood","4":"Acer rubrum red maple","5":"0.2251480","6":"0.5811","7":"<tibble[,2]>","_rn_":"23"},{"1":"24","2":"LG 09-384","3":"leaves and grasses","4":"","5":"0.1274308","6":"0.3670","7":"<tibble[,2]>","_rn_":"24"},{"1":"25","2":"LG 11-309","3":"leaves and grasses","4":"Betula nigra Red birch","5":"0.3292350","6":"0.2214","7":"<tibble[,2]>","_rn_":"25"},{"1":"26","2":"LG 11-393","3":"leaves and grasses","4":"Camelia japonica white by the gate","5":"0.2593800","6":"0.2077","7":"<tibble[,2]>","_rn_":"26"},{"1":"27","2":"LG 11-395","3":"leaves and grasses","4":"Carpitus betulus European Hornbeam","5":"0.2234680","6":"0.2532","7":"<tibble[,2]>","_rn_":"27"},{"1":"28","2":"LG 11-397","3":"leaves and grasses","4":"Clethra alnifolia Sweet pepperbrush","5":"0.3888840","6":"0.1891","7":"<tibble[,2]>","_rn_":"28"},{"1":"29","2":"LG 11-404","3":"leaves and grasses","4":"Ilex calina Carolina holly","5":"0.2713620","6":"0.2570","7":"<tibble[,2]>","_rn_":"29"},{"1":"30","2":"LG 11-412","3":"leaves and grasses","4":"Miscanthus sinensis Maiden grass","5":"0.1783770","6":"0.5355","7":"<tibble[,2]>","_rn_":"30"},{"1":"31","2":"LG 11-414","3":"leaves and grasses","4":"Nyssa sylvatica Black tupelo","5":"0.2188790","6":"0.2035","7":"<tibble[,2]>","_rn_":"31"},{"1":"32","2":"LG 11-418","3":"leaves and grasses","4":"Prunus incisa Fuji cherry","5":"0.3258500","6":"0.1545","7":"<tibble[,2]>","_rn_":"32"},{"1":"33","2":"LG 11-432","3":"leaves and grasses","4":"Acer rubrum red maple","5":"0.2387520","6":"0.1756","7":"<tibble[,2]>","_rn_":"33"},{"1":"34","2":"LG 11-433","3":"leaves and grasses","4":"Cornus florida Flowering dogwood","5":"0.1807650","6":"0.2134","7":"<tibble[,2]>","_rn_":"34"},{"1":"35","2":"LG 11-438","3":"leaves and grasses","4":"Eremochloa ophiuroides Centipede grass","5":"0.1691550","6":"0.4941","7":"<tibble[,2]>","_rn_":"35"},{"1":"36","2":"LG 11-461","3":"leaves and grasses","4":"Quercus viginiana Live oak","5":"0.3175320","6":"0.2568","7":"<tibble[,2]>","_rn_":"36"},{"1":"37","2":"SW 11-138","3":"softwood","4":"Tsuga heterophyla Western hemlock","5":"0.3471160","6":"0.4733","7":"<tibble[,2]>","_rn_":"37"},{"1":"38","2":"SW 11-139","3":"softwood","4":"Pinus monticola Western white pine","5":"0.2749050","6":"0.5444","7":"<tibble[,2]>","_rn_":"38"},{"1":"39","2":"SW 11-154","3":"softwood","4":"Pinus strobus Eastern white pine","5":"0.3117600","6":"0.5270","7":"<tibble[,2]>","_rn_":"39"},{"1":"40","2":"SW 11-158","3":"softwood","4":"Pinus taeda Loblolly pine","5":"0.2747150","6":"0.5659","7":"<tibble[,2]>","_rn_":"40"},{"1":"41","2":"SW 11-178","3":"softwood","4":"Tsuga caroliniana Carolina Hemlock","5":"0.3458700","6":"0.4591","7":"<tibble[,2]>","_rn_":"41"},{"1":"42","2":"OCC 11-457","3":"old corrugated cardboard","4":"OCC 1","5":"0.1018600","6":"0.7709","7":"<tibble[,2]>","_rn_":"42"},{"1":"43","2":"OCC 11-462","3":"old corrugated cardboard","4":"OCC 3","5":"0.1418180","6":"0.7575","7":"<tibble[,2]>","_rn_":"43"},{"1":"44","2":"OCC 11-463","3":"old corrugated cardboard","4":"OCC 2","5":"0.1373680","6":"0.7182","7":"<tibble[,2]>","_rn_":"44"},{"1":"45","2":"OMG 08-82","3":"old magazines","4":"Australia Paper","5":"0.1957380","6":"0.4635","7":"<tibble[,2]>","_rn_":"45"},{"1":"46","2":"OMG 11-454","3":"old magazines","4":"ESPN Magazine dated Sept 2011","5":"0.1935360","6":"0.4760","7":"<tibble[,2]>","_rn_":"46"},{"1":"47","2":"OMG 11-455","3":"old magazines","4":"W Magazine dated Sept 2011","5":"0.1457610","6":"0.4899","7":"<tibble[,2]>","_rn_":"47"},{"1":"48","2":"OMG 11-456","3":"old magazines","4":"CPU Magazine","5":"0.1066450","6":"0.5913","7":"<tibble[,2]>","_rn_":"48"},{"1":"49","2":"ONP 08-78","3":"old newsprint","4":"Australia Paper","5":"0.2407860","6":"0.6320","7":"<tibble[,2]>","_rn_":"49"},{"1":"50","2":"ONP 09-388","3":"old newsprint","4":"Eleazer 1997 sample","5":"0.2389940","6":"0.5750","7":"<tibble[,2]>","_rn_":"50"},{"1":"51","2":"ONP 11-450","3":"old newsprint","4":"News and Observer dated Aug 2011","5":"0.1634850","6":"0.6952","7":"<tibble[,2]>","_rn_":"51"},{"1":"52","2":"ONP 11-451","3":"old newsprint","4":"Houston Chronicle dated Sept 2011","5":"0.2404920","6":"0.5977","7":"<tibble[,2]>","_rn_":"52"},{"1":"53","2":"ONP 11-458","3":"old newsprint","4":"Indianapolis star","5":"0.2884200","6":"0.5716","7":"<tibble[,2]>","_rn_":"53"},{"1":"54","2":"ONP 11-459","3":"old newsprint","4":"Los Angeles Times","5":"0.1952280","6":"0.6503","7":"<tibble[,2]>","_rn_":"54"},{"1":"55","2":"OFF 10-506","3":"office paper","4":"","5":"0.2035740","6":"0.7254","7":"<tibble[,2]>","_rn_":"55"},{"1":"56","2":"OFF 13-144","3":"office paper","4":"","5":"0.3184510","6":"0.7362","7":"<tibble[,2]>","_rn_":"56"},{"1":"57","2":"OFF 08-80","3":"office paper","4":"","5":"0.5624500","6":"0.7268","7":"<tibble[,2]>","_rn_":"57"},{"1":"58","2":"OFF 08-852","3":"office paper","4":"","5":"0.0542300","6":"0.7007","7":"<tibble[,2]>","_rn_":"58"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>Currently, the following methods are available for <code>ir</code> objects:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">methods</span>(<span class="dt">class =</span> <span class="st">&quot;ir&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt;  [1] $        $&lt;-      Ops      [        [&lt;-      [[       [[&lt;-     cbind   </span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;  [9] filter   ir_as_ir max      median   min      plot     range    rbind   </span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt; [17] rep     </span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; see &#39;?methods&#39; for accessing help and source code</span></span></code></pre></div>
+</div>
+<div id="subsetting-and-modifying-ir-objects" class="section level1">
+<h1>Subsetting and modifying <code>ir</code> objects</h1>
+<div id="subsetting-works-as-for-data-frames" class="section level2">
+<h2>Subsetting works as for data frames</h2>
+<p>Since <code>ir</code> objects are data frames, subsetting and modifying works the same way as for data frames. For example, specific rows (= measurements) can be filtered:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>ir_sample_data[<span class="dv">5</span><span class="op">:</span><span class="dv">10</span>, ]</span></code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["id_measurement"],"name":[1],"type":["int"],"align":["right"]},{"label":["id_sample"],"name":[2],"type":["chr"],"align":["left"]},{"label":["sample_type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["sample_comment"],"name":[4],"type":["chr"],"align":["left"]},{"label":["klason_lignin"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["holocellulose"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["spectra"],"name":[7],"type":["named list"],"align":["right"]}],"data":[{"1":"5","2":"GN 11-416","3":"needles","4":"Pinus strobus Torulosa","5":"0.331100","6":"0.3092","7":"<tibble[,2]>","_rn_":"1"},{"1":"6","2":"GN 11-419","3":"needles","4":"Pseudolarix amabili Golden Larch","5":"0.279360","6":"0.3355","7":"<tibble[,2]>","_rn_":"2"},{"1":"7","2":"GN 11-422","3":"needles","4":"Sequoia sempervirens California redwood","5":"0.329672","6":"0.2408","7":"<tibble[,2]>","_rn_":"3"},{"1":"8","2":"GN 11-423","3":"needles","4":"Taxodium distichum Cascade Falls","5":"0.356950","6":"0.1253","7":"<tibble[,2]>","_rn_":"4"},{"1":"9","2":"GN 11-428","3":"needles","4":"Thuja occidentalis Eastern Arborvitae","5":"0.369360","6":"0.2517","7":"<tibble[,2]>","_rn_":"5"},{"1":"10","2":"GN 11-434","3":"needles","4":"Tsuga caroliniana Carolina Hemlock","5":"0.289050","6":"0.3487","7":"<tibble[,2]>","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>The advantage of storing spectra as list columns is that filtering spectral data and metadata and other data can be performed simultaneously.</p>
+<p>One exception is that while subsetting, one must not remove the <code>spectra</code> column. If it is removed, the <code>ir</code> class attribute is dropped:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>d1 &lt;-<span class="st"> </span>ir_sample_data</span>
+<span id="cb8-2"><a href="#cb8-2"></a></span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="kw">class</span>(d1[, <span class="kw">setdiff</span>(<span class="kw">colnames</span>(d), <span class="st">&quot;id_sample&quot;</span>)])</span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="co">#&gt; [1] &quot;ir&quot;         &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a></span>
+<span id="cb8-6"><a href="#cb8-6"></a>d1<span class="op">$</span>spectra &lt;-<span class="st"> </span><span class="ot">NULL</span></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="kw">class</span>(d1)</span>
+<span id="cb8-8"><a href="#cb8-8"></a><span class="co">#&gt; [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</span></span></code></pre></div>
+<p>Another exception is that when the <code>spectra</code> column contains unsupported elements (e.g. wrong column names, additional columns, duplicated “x axis values”), the object also loses its <code>ir</code> class:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>d2 &lt;-<span class="st"> </span>ir_sample_data</span>
+<span id="cb9-2"><a href="#cb9-2"></a>d2<span class="op">$</span>spectra[[<span class="dv">1</span>]] &lt;-<span class="st"> </span><span class="kw">rep</span>(d2<span class="op">$</span>spectra[[<span class="dv">1</span>]], <span class="dv">2</span>)</span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="kw">class</span>(d2)</span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#&gt; [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a></span>
+<span id="cb9-6"><a href="#cb9-6"></a>d3 &lt;-<span class="st"> </span>ir_sample_data</span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="kw">colnames</span>(d3<span class="op">$</span>spectra[[<span class="dv">1</span>]]) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>)</span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="kw">class</span>(d3)</span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co">#&gt; [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</span></span></code></pre></div>
+</div>
+<div id="tidyverse-methods-are-supported" class="section level2">
+<h2>Tidyverse methods are supported</h2>
+<p>Tidyverse methods for manipulating ir objects are also supported. For example, we can use <code>mutate</code> to add new variables and we can use pipes (<code>%&gt;%</code>) to make coding and reading code easier:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">library</span>(dplyr)</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="co">#&gt; Warning: package &#39;dplyr&#39; was built under R version 4.0.5</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="co">#&gt; </span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="co">#&gt; Attaching package: &#39;dplyr&#39;</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="co">#&gt; The following objects are masked from &#39;package:stats&#39;:</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="co">#&gt; </span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="co">#&gt;     filter, lag</span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="co">#&gt; The following objects are masked from &#39;package:base&#39;:</span></span>
+<span id="cb10-9"><a href="#cb10-9"></a><span class="co">#&gt; </span></span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
+<span id="cb10-11"><a href="#cb10-11"></a></span>
+<span id="cb10-12"><a href="#cb10-12"></a>d &lt;-<span class="st"> </span>ir_sample_data</span>
+<span id="cb10-13"><a href="#cb10-13"></a></span>
+<span id="cb10-14"><a href="#cb10-14"></a>d &lt;-<span class="st"> </span></span>
+<span id="cb10-15"><a href="#cb10-15"></a><span class="st">  </span>d <span class="op">%&gt;%</span></span>
+<span id="cb10-16"><a href="#cb10-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">a =</span> <span class="kw">rnorm</span>(<span class="dt">n =</span> <span class="kw">nrow</span>(.)))</span>
+<span id="cb10-17"><a href="#cb10-17"></a>  </span>
+<span id="cb10-18"><a href="#cb10-18"></a><span class="kw">head</span>(ir_sample_data)</span></code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["id_measurement"],"name":[1],"type":["int"],"align":["right"]},{"label":["id_sample"],"name":[2],"type":["chr"],"align":["left"]},{"label":["sample_type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["sample_comment"],"name":[4],"type":["chr"],"align":["left"]},{"label":["klason_lignin"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["holocellulose"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["spectra"],"name":[7],"type":["named list"],"align":["right"]}],"data":[{"1":"1","2":"GN 11-389","3":"needles","4":"Abies Firma Momi fir","5":"0.359944","6":"0.3084","7":"<tibble[,2]>","_rn_":"1"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","_rn_":"2"},{"1":"3","2":"GN 11-407","3":"needles","4":"Juniperus chinensis Chinese juniper","5":"0.267552","6":"0.3362","7":"<tibble[,2]>","_rn_":"3"},{"1":"4","2":"GN 11-411","3":"needles","4":"Metasequoia glyptostroboides Dawn redwood","5":"0.350016","6":"0.1844","7":"<tibble[,2]>","_rn_":"4"},{"1":"5","2":"GN 11-416","3":"needles","4":"Pinus strobus Torulosa","5":"0.331100","6":"0.3092","7":"<tibble[,2]>","_rn_":"5"},{"1":"6","2":"GN 11-419","3":"needles","4":"Pseudolarix amabili Golden Larch","5":"0.279360","6":"0.3355","7":"<tibble[,2]>","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>Or, a another example, we can summarize spectra for some defined groups (here the maximum intensity value for each “x axis value” and unique <code>sample_type</code> value):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">library</span>(purrr)</span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="kw">library</span>(ggplot2)</span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="co">#&gt; Warning: package &#39;ggplot2&#39; was built under R version 4.0.5</span></span>
+<span id="cb11-4"><a href="#cb11-4"></a></span>
+<span id="cb11-5"><a href="#cb11-5"></a>d2 &lt;-<span class="st"> </span></span>
+<span id="cb11-6"><a href="#cb11-6"></a><span class="st">  </span>d <span class="op">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7"></a><span class="st">  </span><span class="kw">group_by</span>(sample_type) <span class="op">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="st">  </span><span class="kw">summarize</span>(</span>
+<span id="cb11-9"><a href="#cb11-9"></a>    <span class="dt">spectra =</span> {</span>
+<span id="cb11-10"><a href="#cb11-10"></a>      res &lt;-<span class="st"> </span><span class="kw">map_dfc</span>(spectra, <span class="cf">function</span>(.x) .x[, <span class="dv">2</span>, <span class="dt">drop =</span> <span class="ot">TRUE</span>])</span>
+<span id="cb11-11"><a href="#cb11-11"></a>      spectra[[<span class="dv">1</span>]] <span class="op">%&gt;%</span></span>
+<span id="cb11-12"><a href="#cb11-12"></a><span class="st">        </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(</span>
+<span id="cb11-13"><a href="#cb11-13"></a>          <span class="dt">y =</span></span>
+<span id="cb11-14"><a href="#cb11-14"></a>            res <span class="op">%&gt;%</span></span>
+<span id="cb11-15"><a href="#cb11-15"></a><span class="st">            </span><span class="kw">rowwise</span>() <span class="op">%&gt;%</span></span>
+<span id="cb11-16"><a href="#cb11-16"></a><span class="st">            </span><span class="kw">mutate</span>(<span class="dt">y =</span> <span class="kw">max</span>(<span class="kw">c_across</span>(<span class="kw">everything</span>()))) <span class="op">%&gt;%</span></span>
+<span id="cb11-17"><a href="#cb11-17"></a><span class="st">            </span><span class="kw">pull</span>(y)</span>
+<span id="cb11-18"><a href="#cb11-18"></a>        ) <span class="op">%&gt;%</span></span>
+<span id="cb11-19"><a href="#cb11-19"></a><span class="st">        </span><span class="kw">list</span>()</span>
+<span id="cb11-20"><a href="#cb11-20"></a>    },</span>
+<span id="cb11-21"><a href="#cb11-21"></a>    <span class="dt">.groups =</span> <span class="st">&quot;drop&quot;</span></span>
+<span id="cb11-22"><a href="#cb11-22"></a>  )</span>
+<span id="cb11-23"><a href="#cb11-23"></a></span>
+<span id="cb11-24"><a href="#cb11-24"></a><span class="kw">plot</span>(d2) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb11-25"><a href="#cb11-25"></a><span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span><span class="st"> </span>sample_type)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="special-functions-to-manipulate-ir-objects" class="section level1">
+<h1>Special functions to manipulate <code>ir objects</code></h1>
+<p>There are some more special functions to manipulate <code>ir</code> objects which are not described in vignette <a href="ir-introduction.html">Introduction to the ‘ir’ package</a>. These will be described here.</p>
+<div id="replicating-data" class="section level2">
+<h2>Replicating data</h2>
+<p>Sometimes, it is useful to replicate one or multiple measurements. This can be done with the <code>rep()</code> method for <code>ir</code> objects. For example, we can replicate the second spectrum in <code>ir_sample_data</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>ir_sample_data <span class="op">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="st">  </span><span class="kw">slice</span>(<span class="dv">2</span>) <span class="op">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="st">  </span><span class="kw">rep</span>(<span class="dv">20</span>)</span></code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["id_measurement"],"name":[1],"type":["int"],"align":["right"]},{"label":["id_sample"],"name":[2],"type":["chr"],"align":["left"]},{"label":["sample_type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["sample_comment"],"name":[4],"type":["chr"],"align":["left"]},{"label":["klason_lignin"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["holocellulose"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["spectra"],"name":[7],"type":["named list"],"align":["right"]},{"label":["measurement_id"],"name":[8],"type":["int"],"align":["right"]}],"data":[{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"1","_rn_":"1"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"2","_rn_":"2"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"3","_rn_":"3"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"4","_rn_":"4"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"5","_rn_":"5"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"6","_rn_":"6"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"7","_rn_":"7"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"8","_rn_":"8"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"9","_rn_":"9"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"10","_rn_":"10"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"11","_rn_":"11"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"12","_rn_":"12"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"13","_rn_":"13"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"14","_rn_":"14"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"15","_rn_":"15"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"16","_rn_":"16"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"17","_rn_":"17"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"18","_rn_":"18"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"19","_rn_":"19"},{"1":"2","2":"GN 11-400","3":"needles","4":"Cupressocyparis leylandii Leyland cypress","5":"0.339405","6":"0.2497","7":"<tibble[,2]>","8":"20","_rn_":"20"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="calculating-with-spectra" class="section level2">
+<h2>Calculating with spectra</h2>
+<p>The <code>ir</code> packages supports arithmetic operations with spectra, i.e. addition, subtraction, multiplication, and division of intensity values with the same “x axis values”. For example, we can subtract the third spectrum in <code>ir_sample_data</code> from the second:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>ir_sample_data <span class="op">%&gt;%</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="st">  </span><span class="kw">slice</span>(<span class="dv">2</span>) <span class="op">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="st">  </span><span class="kw">ir_subtract</span>(<span class="dt">y =</span> ir_sample_data[<span class="dv">3</span>, ]) <span class="op">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">id_sample =</span> <span class="st">&quot;subtraction_result&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="st">  </span><span class="kw">rbind</span>(ir_sample_data[<span class="dv">2</span><span class="op">:</span><span class="dv">3</span>, ]) <span class="op">%&gt;%</span></span>
+<span id="cb13-6"><a href="#cb13-6"></a><span class="st">  </span><span class="kw">plot</span>() <span class="op">+</span><span class="st"> </span><span class="kw">facet_wrap</span>(<span class="op">~</span><span class="st"> </span>id_sample)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<p>Note that all metadata of the first argument (<code>x</code>) will be retained, but not of the second (<code>y</code>). This is why we had to manually change <code>id_sample</code> before <code>rbind</code>ing the other spectra above. Note also that <code>x</code> can contain multiple spectra, <code>y</code> must either only contain one spectrum or the same number of spectra as <code>x</code> in which case spectra of matching rows are subtracted (added, multiplied, divided):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># This will not work</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>ir_sample_data <span class="op">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="st">  </span><span class="kw">slice</span>(<span class="dv">6</span>) <span class="op">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="st">  </span><span class="kw">ir_add</span>(<span class="dt">y =</span> ir_sample_data[<span class="dv">3</span><span class="op">:</span><span class="dv">4</span>, ])</span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="co">#&gt; Error in `ir_add()`:</span></span>
+<span id="cb14-6"><a href="#cb14-6"></a><span class="co">#&gt; ! `y` must either have only one row or as many rows as `x`.</span></span>
+<span id="cb14-7"><a href="#cb14-7"></a></span>
+<span id="cb14-8"><a href="#cb14-8"></a><span class="co"># but this will</span></span>
+<span id="cb14-9"><a href="#cb14-9"></a>ir_sample_data <span class="op">%&gt;%</span></span>
+<span id="cb14-10"><a href="#cb14-10"></a><span class="st">  </span><span class="kw">slice</span>(<span class="dv">2</span><span class="op">:</span><span class="dv">6</span>) <span class="op">%&gt;%</span></span>
+<span id="cb14-11"><a href="#cb14-11"></a><span class="st">  </span><span class="kw">ir_add</span>(<span class="dt">y =</span> ir_sample_data[<span class="dv">3</span>, ]) </span>
+<span id="cb14-12"><a href="#cb14-12"></a><span class="co">#&gt; # A tibble: 5 x 7</span></span>
+<span id="cb14-13"><a href="#cb14-13"></a><span class="co">#&gt;   id_measurement id_sample sample_type sample_comment              klason_lignin</span></span>
+<span id="cb14-14"><a href="#cb14-14"></a><span class="co">#&gt; *          &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;                       &lt;units&gt;      </span></span>
+<span id="cb14-15"><a href="#cb14-15"></a><span class="co">#&gt; 1              2 GN 11-400 needles     Cupressocyparis leylandii ~ 0.339405     </span></span>
+<span id="cb14-16"><a href="#cb14-16"></a><span class="co">#&gt; 2              3 GN 11-407 needles     Juniperus chinensis Chines~ 0.267552     </span></span>
+<span id="cb14-17"><a href="#cb14-17"></a><span class="co">#&gt; 3              4 GN 11-411 needles     Metasequoia glyptostroboid~ 0.350016     </span></span>
+<span id="cb14-18"><a href="#cb14-18"></a><span class="co">#&gt; 4              5 GN 11-416 needles     Pinus strobus Torulosa      0.331100     </span></span>
+<span id="cb14-19"><a href="#cb14-19"></a><span class="co">#&gt; 5              6 GN 11-419 needles     Pseudolarix amabili Golden~ 0.279360     </span></span>
+<span id="cb14-20"><a href="#cb14-20"></a><span class="co">#&gt; # ... with 2 more variables: holocellulose &lt;units&gt;, spectra &lt;list&gt;</span></span></code></pre></div>
+<p>Note that arithmetic operations are also available as infix operators, i.e. it is possible to compute:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>ir_sample_data[<span class="dv">2</span>, ] <span class="op">+</span><span class="st"> </span>ir_sample_data[<span class="dv">3</span>, ]</span>
+<span id="cb15-2"><a href="#cb15-2"></a><span class="co">#&gt; # A tibble: 1 x 7</span></span>
+<span id="cb15-3"><a href="#cb15-3"></a><span class="co">#&gt;   id_measurement id_sample sample_type sample_comment              klason_lignin</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a><span class="co">#&gt; *          &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;                       &lt;units&gt;      </span></span>
+<span id="cb15-5"><a href="#cb15-5"></a><span class="co">#&gt; 1              2 GN 11-400 needles     Cupressocyparis leylandii ~ 0.339405     </span></span>
+<span id="cb15-6"><a href="#cb15-6"></a><span class="co">#&gt; # ... with 2 more variables: holocellulose &lt;units&gt;, spectra &lt;list&gt;</span></span>
+<span id="cb15-7"><a href="#cb15-7"></a>ir_sample_data[<span class="dv">2</span>, ] <span class="op">-</span><span class="st"> </span>ir_sample_data[<span class="dv">3</span>, ]</span>
+<span id="cb15-8"><a href="#cb15-8"></a><span class="co">#&gt; # A tibble: 1 x 7</span></span>
+<span id="cb15-9"><a href="#cb15-9"></a><span class="co">#&gt;   id_measurement id_sample sample_type sample_comment              klason_lignin</span></span>
+<span id="cb15-10"><a href="#cb15-10"></a><span class="co">#&gt; *          &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;                       &lt;units&gt;      </span></span>
+<span id="cb15-11"><a href="#cb15-11"></a><span class="co">#&gt; 1              2 GN 11-400 needles     Cupressocyparis leylandii ~ 0.339405     </span></span>
+<span id="cb15-12"><a href="#cb15-12"></a><span class="co">#&gt; # ... with 2 more variables: holocellulose &lt;units&gt;, spectra &lt;list&gt;</span></span>
+<span id="cb15-13"><a href="#cb15-13"></a>ir_sample_data[<span class="dv">2</span>, ] <span class="op">*</span><span class="st"> </span>ir_sample_data[<span class="dv">3</span>, ]</span>
+<span id="cb15-14"><a href="#cb15-14"></a><span class="co">#&gt; # A tibble: 1 x 7</span></span>
+<span id="cb15-15"><a href="#cb15-15"></a><span class="co">#&gt;   id_measurement id_sample sample_type sample_comment              klason_lignin</span></span>
+<span id="cb15-16"><a href="#cb15-16"></a><span class="co">#&gt; *          &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;                       &lt;units&gt;      </span></span>
+<span id="cb15-17"><a href="#cb15-17"></a><span class="co">#&gt; 1              2 GN 11-400 needles     Cupressocyparis leylandii ~ 0.339405     </span></span>
+<span id="cb15-18"><a href="#cb15-18"></a><span class="co">#&gt; # ... with 2 more variables: holocellulose &lt;units&gt;, spectra &lt;list&gt;</span></span>
+<span id="cb15-19"><a href="#cb15-19"></a>ir_sample_data[<span class="dv">2</span>, ] <span class="op">/</span><span class="st"> </span>ir_sample_data[<span class="dv">3</span>, ]</span>
+<span id="cb15-20"><a href="#cb15-20"></a><span class="co">#&gt; # A tibble: 1 x 7</span></span>
+<span id="cb15-21"><a href="#cb15-21"></a><span class="co">#&gt;   id_measurement id_sample sample_type sample_comment              klason_lignin</span></span>
+<span id="cb15-22"><a href="#cb15-22"></a><span class="co">#&gt; *          &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;                       &lt;units&gt;      </span></span>
+<span id="cb15-23"><a href="#cb15-23"></a><span class="co">#&gt; 1              2 GN 11-400 needles     Cupressocyparis leylandii ~ 0.339405     </span></span>
+<span id="cb15-24"><a href="#cb15-24"></a><span class="co">#&gt; # ... with 2 more variables: holocellulose &lt;units&gt;, spectra &lt;list&gt;</span></span></code></pre></div>
+</div>
+</div>
+<div id="further-information" class="section level1">
+<h1>Further information</h1>
+<p>Many more functions and options to handle and process spectra are available in the ‘ir’ package. These are described in the documentation. In the documentation, you can also read more details about the functions and options presented here.<br />
+To learn more about how <code>ir</code> objects can be useful can be plotted, and the spectral preprocessing functions, see the vignette <a href="ir-introduction.html">Introduction to the ‘ir’ package</a>.</p>
+</div>
+<div id="sources" class="section level1">
+<h1>Sources</h1>
+<p>The data contained in the <code>csv</code> file used in this vignette are derived from <span class="citation">Hodgkins et al. (2018)</span></p>
+</div>
+<div id="session-info" class="section level1">
+<h1>Session info</h1>
+<pre><code>#&gt; R version 4.0.1 (2020-06-06)
+#&gt; Platform: i386-w64-mingw32/i386 (32-bit)
+#&gt; Running under: Windows 10 x64 (build 19044)
+#&gt; 
+#&gt; Matrix products: default
+#&gt; 
+#&gt; locale:
+#&gt; [1] LC_COLLATE=C                    LC_CTYPE=German_Germany.1252   
+#&gt; [3] LC_MONETARY=German_Germany.1252 LC_NUMERIC=C                   
+#&gt; [5] LC_TIME=German_Germany.1252    
+#&gt; 
+#&gt; attached base packages:
+#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     
+#&gt; 
+#&gt; other attached packages:
+#&gt; [1] ggplot2_3.3.5 purrr_0.3.4   dplyr_1.0.8   ir_0.2.0     
+#&gt; 
+#&gt; loaded via a namespace (and not attached):
+#&gt;  [1] tidyselect_1.1.2        xfun_0.30               bslib_0.3.1            
+#&gt;  [4] lpSolve_5.6.15          lattice_0.20-41         limSolve_1.5.6         
+#&gt;  [7] colorspace_1.4-1        hyperSpec_0.99-20200527 vctrs_0.4.1            
+#&gt; [10] generics_0.1.2          testthat_3.1.3          htmltools_0.5.2        
+#&gt; [13] yaml_2.2.1              utf8_1.1.4              rlang_1.0.2            
+#&gt; [16] jquerylib_0.1.3         pillar_1.7.0            withr_2.5.0            
+#&gt; [19] glue_1.6.2              DBI_1.1.0               RColorBrewer_1.1-2     
+#&gt; [22] jpeg_0.1-8.1            lifecycle_1.0.1         stringr_1.4.0          
+#&gt; [25] munsell_0.5.0           gtable_0.3.0            evaluate_0.15          
+#&gt; [28] labeling_0.3            latticeExtra_0.6-29     knitr_1.38             
+#&gt; [31] fastmap_1.1.0           SparseM_1.78            gbRd_0.4-11            
+#&gt; [34] fansi_0.4.1             highr_0.8               scales_1.1.1           
+#&gt; [37] jsonlite_1.8.0          farver_2.0.3            brio_1.1.0             
+#&gt; [40] png_0.1-7               digest_0.6.25           stringi_1.7.6          
+#&gt; [43] baseline_1.3-0          grid_4.0.1              bibtex_0.4.2.2         
+#&gt; [46] quadprog_1.5-8          Rdpack_0.11-1           cli_3.2.0              
+#&gt; [49] tools_4.0.1             magrittr_2.0.3          sass_0.4.1             
+#&gt; [52] lazyeval_0.2.2          tibble_3.1.6            tidyr_1.2.0            
+#&gt; [55] crayon_1.4.2            pkgconfig_2.0.3         MASS_7.3-51.6          
+#&gt; [58] ellipsis_0.3.2          xml2_1.3.2              assertthat_0.2.1       
+#&gt; [61] rmarkdown_2.13          rstudioapi_0.13         R6_2.4.1               
+#&gt; [64] compiler_4.0.1</code></pre>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+<div id="refs" class="references hanging-indent">
+<div id="ref-Hodgkins.2018">
+<p>Hodgkins, Suzanne B., Curtis J. Richardson, René Dommain, Hongjun Wang, Paul H. Glaser, Brittany Verbeke, B. Rose Winkler, et al. 2018. “Tropical peatland carbon storage linked to global latitudinal trends in peat recalcitrance.” <em>Nature communications</em> 9 (1): 3640. <a href="https://doi.org/10.1038/s41467-018-06050-2">https://doi.org/10.1038/s41467-018-06050-2</a>.</p>
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
