@@ -1,6 +1,6 @@
 Package: ir
 Title: Functions to Handle and Preprocess Infrared Spectra
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: 
     person(given = "Henning",
            family = "Teickner",
@@ -21,16 +21,17 @@ Imports: tidyr, dplyr, purrr, tibble, ggplot2, stringr, ChemoSpec (>=
         5.2.12), hyperSpec (>= 0.99.20200527), signal, grDevices,
         rlang, methods, units, Rdpack, magrittr, stats, lifecycle,
         baseline
-Suggests: kableExtra, fda, knitr, rmarkdown, spelling
+Suggests: kableExtra, fda, knitr, rmarkdown, spelling, vctrs,
+        tidyselect
 VignetteBuilder: knitr
 RdMacros: Rdpack
-Date: 2022-04-20
+Date: 2022-05-02
 URL: https://henningte.github.io/ir/
 Language: en-US
 NeedsCompilation: no
-Packaged: 2022-04-22 10:20:19 UTC; henni
+Packaged: 2022-05-02 11:27:00 UTC; henni
 Author: Henning Teickner [aut, cre, cph]
     (<https://orcid.org/0000-0002-3993-1182>)
 Maintainer: Henning Teickner <henning.teickner@uni-muenster.de>
 Repository: CRAN
-Date/Publication: 2022-04-25 08:10:08 UTC
+Date/Publication: 2022-05-02 11:50:08 UTC

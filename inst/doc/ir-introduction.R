@@ -50,7 +50,7 @@ d_csv <-
   dplyr::full_join(d_csv_metadata, by = "sample_id")
 
 ## ----import-spc-1-------------------------------------------------------------
-d_spc <- ir_import_spc("../inst/extdata/1.spc")
+d_spc <- ir_import_spc("../inst/extdata/1.spc", log.txt = FALSE)
 
 ## ----export-csv-1-------------------------------------------------------------
 # export only the spectra
