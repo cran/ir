@@ -24,7 +24,7 @@
 #' @examples
 #' ir_new_ir(
 #'   spectra = ir_sample_data$spectra,
-#'   metadata = ir_sample_data %>% dplyr::select(-spectra)
+#'   metadata = ir_sample_data |> dplyr::select(-spectra)
 #' )
 #'
 #' @export
@@ -182,7 +182,7 @@ NULL
 #' attribute.
 #'
 #' @examples
-#' ir::ir_sample_data %>%
+#' ir::ir_sample_data |>
 #'   ir_drop_spectra()
 #'
 #' @export
@@ -195,19 +195,21 @@ ir_drop_spectra <- function(x) {
 
 #### Casting: to ir ####
 
-#' Generic to convert objects to class `ir`
+#' Converts an object to class `ir`
 #'
-#' `ir_as_ir` ir the generic to convert an object to an object of class
-#' [`ir`][ir_new_ir()].
+#' `ir_as_ir` converts an object to an object of class [`ir`][ir_new_ir()].
 #'
 #' @param x An object.
 #'
 #' @param ... Further arguments passed to individual methods.
 #' \itemize{
-#' \item If `x` is a data frame or an object of class `ir`, these are
-#'   ignored.
+#' \item If `x` is a data frame, an object of class `ir`, an object of class
+#'   `hyperSpec` (from package 'hyperSpec'), or an object of class `Spectra`
+#'   (from package 'ChemoSpec'), these are ignored.
 #' }
-#' @return An object of class `ir`.
+#'
+#' @return An object of class `ir` with available metadata from original
+#' objects.
 #'
 #' @export
 ir_as_ir <- function(x, ...) {
@@ -218,7 +220,7 @@ ir_as_ir <- function(x, ...) {
 #'
 #' @examples
 #' # conversion from an ir object
-#' ir::ir_sample_data %>%
+#' ir::ir_sample_data |>
 #'   ir_as_ir()
 #'
 #' @export
@@ -233,23 +235,123 @@ ir_as_ir.ir <- function(x, ...) {
 #' x_ir <- ir::ir_sample_data
 #'
 #' x_df <-
-#'   x_ir %>%
-#'   ir_drop_spectra() %>%
+#'   x_ir |>
+#'   ir_drop_spectra() |>
 #'   dplyr::mutate(
 #'     spectra = x_ir$spectra
-#'   ) %>%
+#'   ) |>
 #'   ir_as_ir()
 #'
 #' # check that ir_as_ir preserves the input class
-#' ir_sample_data %>%
-#'   structure(class = setdiff(class(.), "ir")) %>%
-#'   dplyr::group_by(sample_type) %>%
+#' ir_sample_data |>
+#'   structure(class = setdiff(class(ir_sample_data), "ir")) |>
+#'   dplyr::group_by(sample_type) |>
 #'   ir_as_ir()
 #'
 #'
 #' @export
 ir_as_ir.data.frame <- function(x, ...) {
   ir_new_ir(spectra = x$spectra, metadata = x[, -match("spectra", colnames(x))])
+}
+
+#' @rdname ir_as_ir
+#'
+#' @examples
+#' # conversion from an ir_flat object
+#' x_ir <-
+#'   ir::ir_sample_data |>
+#'   ir::ir_flatten() |>
+#'   ir::ir_as_ir()
+#'
+#' @export
+ir_as_ir.ir_flat <- function(x, ...) {
+  ir_new_ir(spectra = ir_stack(x)$spectra, metadata = tibble::tibble(id_measurement = colnames(x)[-1]))
+}
+
+#' @rdname ir_as_ir
+#'
+#' @examples
+#' # conversion from a hyperSpec object from package hyperSpec
+#' if(requireNamespace("hyperSpec")) {
+#'   x_hyperSpec <- hyperSpec::laser
+#'   x_ir <- ir_as_ir(x_hyperSpec)
+#' }
+#'
+#' @export
+ir_as_ir.hyperSpec <- function(x, ...) {
+
+  # spectra
+  x_spectra <-
+    purrr::map(seq_len(nrow(x@data$spc)), function(i) {
+      tibble::tibble(
+        x = x@wavelength,
+        y = unlist(!!x@data$spc[i, ])
+      )
+    })
+
+  # metadata
+  x_metadata <-
+    x@data
+  x_metadata <- x_metadata[, colnames(x_metadata) != "spc"]
+
+  ir_new_ir(spectra = x_spectra, metadata = x_metadata)
+}
+
+#' @rdname ir_as_ir
+#'
+#' @examples
+#' # conversion from a Spectra object from class ChemoSpec
+#' if(requireNamespace("ChemoSpec")) {
+#'
+#'   ## sample data
+#'   x <- ir_sample_data
+#'   x_flat <- ir_flatten(x)
+#'
+#'   ## creation of the object of class "Spectra" (the ChemoSpec package does
+#'   ## not contain a sample Spectra object)
+#'   n <- nrow(x)
+#'   group_vector <- seq(from = 1, to = n, by = 1)
+#'   color_vector <- rep("black", times = n)
+#'   x_Spectra <- list() # dummy list
+#'   x_Spectra$freq <- as.numeric(x_flat[,1, drop = TRUE]) # wavenumber vector
+#'   x_Spectra$data <- as.matrix(t(x_flat[,-1])) # absorbance values as matrix
+#'   x_Spectra$names <- as.character(seq_len(nrow(x))) # sample names
+#'   x_Spectra$groups <- as.factor(group_vector) # grouping vector
+#'   x_Spectra$colors <- color_vector # colors used for groups in plots
+#'   x_Spectra$sym <- as.numeric(group_vector) # symbols used for groups in plots
+#'   x_Spectra$alt.sym <- letters[as.numeric(group_vector)] # letters used for groups in plots
+#'   x_Spectra$unit <- c("wavenumbers", "intensity") # unit of x and y axes
+#'   x_Spectra$desc <- "NULL" # optional descriptions in plots
+#'   attr(x_Spectra, "class") <- "Spectra"
+#'
+#'   # conversion to ir
+#'   x_ir <- ir_as_ir(x_Spectra)
+#' }
+#'
+#' @export
+ir_as_ir.Spectra <- function(x, ...) {
+
+  # spectra
+  x_spectra <-
+    purrr::map(seq_len(nrow(x$data)), function(i) {
+      tibble::tibble(
+        x = x$freq,
+        y = !!x$data[i, ]
+      )
+    })
+
+  # metadata
+  x_metadata <-
+    tibble::tibble(
+      names = x$names,
+      groups = x$groups,
+      colors = x$colors,
+      sym = x$sym,
+      alt.sym = x$alt.sym,
+      unit = rep(list(x$unit), length(x$names))
+    )
+
+  ir_new_ir(spectra = x_spectra, metadata = x_metadata)
 }
 
 #### Casting: from ir ####
@@ -296,7 +398,7 @@ rep.ir <- function(x, ...) {
 #'
 #' @examples
 #' x1 <-
-#'    ir::ir_sample_data %>%
+#'    ir::ir_sample_data |>
 #'    ir_drop_unneccesary_cols()
 #'
 #' @keywords internal
@@ -324,7 +426,9 @@ ir_drop_unneccesary_cols <- function(x) {
 #' @noRd
 ir_reclass_ir <- function(x) {
 
-  if(! "spectra" %in% colnames(x)) { # spectra column not present
+  if(is.null(x)) {
+    x
+  } else if(! "spectra" %in% colnames(x)) { # spectra column not present
     structure(x, class = setdiff(class(x), "ir"))
   } else if(inherits(try(ir_check_spectra(x$spectra), silent = TRUE), "try-error")) { # spectra column present, but wrong format
     structure(x, class = setdiff(class(x), "ir"))
@@ -415,4 +519,23 @@ ir_check_ir <- function(x) {
   if(!inherits(x, "ir"))
     rlang::abort(paste0("`", x_sym, "` must be of class `ir`, not ", class(x)[[1]], "."))
   x
+}
+
+#' Identifies empty spectra in an `ir` object
+#'
+#' `ir_identify_empty_spectra()` identifies empty spectra in an object of class
+#' [`ir`][ir_new_ir()]. An empty spectrum is a spectrum which has no data values
+#' (no rows) or where all intensity values (column `y`) are `NA`.
+#'
+#' @param x An object of class `ir`.
+#'
+#' @return A logical vector indicating for each spectrum in `x` whether it is
+#' empty (`TRUE`) or not (`FALSE`).
+#'
+#' @examples
+#' ir_identify_empty_spectra(ir::ir_sample_data)
+#'
+#' @export
+ir_identify_empty_spectra <- function(x) {
+  purrr::map_lgl(x$spectra, function(.x) nrow(.x) == 0 || all(is.na(.x$y)))
 }

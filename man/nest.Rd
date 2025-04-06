@@ -28,34 +28,37 @@ unnest.ir(
 \arguments{
 \item{.data}{An object of class \code{ir}.}
 
-\item{...}{<\code{\link[tidyr:tidyr_tidy_select]{tidy-select}}> Columns to nest, specified
-using name-variable pairs of the form \code{new_col = c(col1, col2, col3)}.
-The right hand side can be any valid tidy select expression.
+\item{...}{<\code{\link[tidyr:tidyr_tidy_select]{tidy-select}}> Columns to nest; these will
+appear in the inner data frames.
+
+Specified using name-variable pairs of the form
+\code{new_col = c(col1, col2, col3)}. The right hand side can be any valid
+tidyselect expression.
+
+If not supplied, then \code{...} is derived as all columns \emph{not} selected by
+\code{.by}, and will use the column name from \code{.key}.
 
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}:
-previously you could write \code{df \%>\% nest(x, y, z)} and \code{df \%>\% unnest(x, y, z)}. Convert to \code{df \%>\% nest(data = c(x, y, z))}.
-and \code{df \%>\% unnest(c(x, y, z))}.
+previously you could write \code{df \%>\% nest(x, y, z)}.
+Convert to \code{df \%>\% nest(data = c(x, y, z))}.}
 
-If you previously created new variable in \code{unnest()} you'll now need to
-do it explicitly with \code{mutate()}. Convert \code{df \%>\% unnest(y = fun(x, y, z))}
-to \code{df \%>\% mutate(y = fun(x, y, z)) \%>\% unnest(y)}.}
+\item{.key}{The name of the resulting nested column. Only applicable when
+\code{...} isn't specified, i.e. in the case of \code{df \%>\% nest(.by = x)}.
 
-\item{.key}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}:
-No longer needed because of the new \code{new_col = c(col1, col2, col3)} syntax.}
+If \code{NULL}, then \code{"data"} will be used by default.}
 
 \item{data}{A data frame.}
 
-\item{cols}{<\code{\link[tidyr:tidyr_tidy_select]{tidy-select}}> Columns to unnest.
+\item{cols}{<\code{\link[tidyr:tidyr_tidy_select]{tidy-select}}> List-columns to unnest.
 
-If you \code{unnest()} multiple columns, parallel entries must be of
-compatible sizes, i.e. they're either equal or length 1 (following the
-standard tidyverse recycling rules).}
+When selecting multiple columns, values from the same row will be recycled
+to their common size.}
 
 \item{keep_empty}{By default, you get one row of output for each element
-of the list your unchopping/unnesting. This means that if there's a
-size-0 element (like \code{NULL} or an empty data frame), that entire row
-will be dropped from the output. If you want to preserve all rows,
-use \code{keep_empty = TRUE} to replace size-0 elements with a single row
+of the list that you are unchopping/unnesting. This means that if there's a
+size-0 element (like \code{NULL} or an empty data frame or vector), then that
+entire row will be dropped from the output. If you want to preserve all
+rows, use \code{keep_empty = TRUE} to replace size-0 elements with a single row
 of missing values.}
 
 \item{ptype}{Optionally, a named list of column name-prototype pairs to
@@ -77,10 +80,10 @@ nesting and unnesting.}
 \item{names_repair}{Used to check that output data frame has valid
 names. Must be one of the following options:
 \itemize{
-\item "minimal": no name repair or checks, beyond basic existence,
-\item "unique": make sure names are unique and not empty,
-\item "check_unique": (the default), no name repair, but check they are unique,
-\item "universal": make the names unique and syntactic
+\item \verb{"minimal}": no name repair or checks, beyond basic existence,
+\item \verb{"unique}": make sure names are unique and not empty,
+\item \verb{"check_unique}": (the default), no name repair, but check they are unique,
+\item \verb{"universal}": make the names unique and syntactic
 \item a function: apply custom name repair.
 \item \link[tidyr]{tidyr_legacy}: use the name repair from tidyr 0.8.
 \item a formula: a purrr-style anonymous function (see \code{\link[rlang:as_function]{rlang::as_function()}})
@@ -110,17 +113,17 @@ Nest and un-nest an \code{ir} object
 }
 \examples{
 ## nest
-ir_sample_data \%>\%
+ir_sample_data |>
   tidyr::nest(
     contents = c(holocellulose, klason_lignin)
   )
 
 
 ## unnest
-ir_sample_data \%>\%
+ir_sample_data |>
   tidyr::nest(
     contents = c(holocellulose, klason_lignin)
-  ) \%>\%
+  ) |>
   tidyr::unnest("contents")
 
 
@@ -133,8 +136,8 @@ Other tidyverse:
 \code{\link{filter-joins}},
 \code{\link{filter.ir}()},
 \code{\link{group_by}},
-\code{\link{mutate-joins}},
 \code{\link{mutate}},
+\code{\link{mutate-joins}},
 \code{\link{pivot_longer.ir}()},
 \code{\link{pivot_wider.ir}()},
 \code{\link{rename}},

@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' x_flat <-
-#'    ir::ir_sample_data %>%
+#'    ir::ir_sample_data |>
 #'    ir::ir_flatten()
 #'
 #' @export
@@ -28,12 +28,41 @@ ir_flatten <- function(x, measurement_id = as.character(seq_len(nrow(x)))) {
   }
 
   ir_check_ir(x)
-  x$spectra <- purrr::map2(x$spectra, measurement_id, function(x, y) {
-    colnames(x)[[2]] <- y
-    x
-  })
-  x <- purrr::reduce(x$spectra, dplyr::full_join, by = "x")
-  ir_new_ir_flat(x[order(x$x), ])
+
+  spectrum_is_empty <- ir_identify_empty_spectra(x)
+  if(all(spectrum_is_empty)) {
+
+    res <-
+      matrix(nrow = 0, ncol = nrow(x) + 1) %>%
+      as.data.frame() %>%
+      stats::setNames(nm = c("x", measurement_id))
+
+  } else {
+
+    x$spectra[spectrum_is_empty] <-
+      list(
+        x$spectra[! spectrum_is_empty][[1]] %>%
+          dplyr::mutate(
+            y = NA_real_
+          )
+      ) %>%
+      rep(sum(spectrum_is_empty))
+
+    res <-
+      purrr::map2(x$spectra, seq_len(nrow(x)), function(.x, .y) {
+        .x$id_measurement <- .y
+        .x
+      }) %>%
+      purrr::list_rbind() %>%
+      tidyr::pivot_wider(
+        names_from = "id_measurement",
+        values_from = "y"
+      ) %>%
+      stats::setNames(nm = c("x", measurement_id))
+
+  }
+
+  ir_new_ir_flat(res[order(res$x), ])
 
 }
 

@@ -26,10 +26,14 @@ pivot_wider.ir(
 \item{data}{An object of class \code{ir}.}
 
 \item{id_cols}{<\code{\link[tidyr:tidyr_tidy_select]{tidy-select}}> A set of columns that
-uniquely identifies each observation. Defaults to all columns in \code{data}
-except for the columns specified in \code{names_from} and \code{values_from}.
-Typically used when you have redundant variables, i.e. variables whose
-values are perfectly correlated with existing variables.}
+uniquely identify each observation. Typically used when you have
+redundant variables, i.e. variables whose values are perfectly correlated
+with existing variables.
+
+Defaults to all columns in \code{data} except for the columns specified through
+\code{names_from} and \code{values_from}. If a tidyselect expression is supplied, it
+will be evaluated on \code{data} after removing the columns specified through
+\code{names_from} and \code{values_from}.}
 
 \item{names_from, values_from}{<\code{\link[tidyr:tidyr_tidy_select]{tidy-select}}> A pair of
 arguments describing which column (or columns) to get the name of the
@@ -86,10 +90,10 @@ Pivot an \code{ir} object from wide to long
 }
 \examples{
 ## pivot_wider
-ir_sample_data \%>\%
+ir_sample_data |>
   tidyr::pivot_longer(
     cols = dplyr::any_of(c("holocellulose", "klason_lignin"))
-  ) \%>\%
+  ) |>
   tidyr::pivot_wider(names_from = "name", values_from = "value")
 
 
@@ -102,8 +106,8 @@ Other tidyverse:
 \code{\link{filter-joins}},
 \code{\link{filter.ir}()},
 \code{\link{group_by}},
-\code{\link{mutate-joins}},
 \code{\link{mutate}},
+\code{\link{mutate-joins}},
 \code{\link{nest}},
 \code{\link{pivot_longer.ir}()},
 \code{\link{rename}},

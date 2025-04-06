@@ -4,14 +4,22 @@
 \alias{ir_bc_rubberband}
 \title{Performs baseline correction on infrared spectra using a rubberband algorithm}
 \usage{
-ir_bc_rubberband(x, return_bl = FALSE)
+ir_bc_rubberband(x, do_impute = FALSE, return_bl = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class \code{\link[=ir_new_ir]{ir}}.}
 
+\item{do_impute}{A logical value indicating whether the in baseline the first
+and last values should be imputed with the second first and second last
+values, respectively (\code{TRUE}) or not (\code{FALSE}). This can be useful in case
+baseline correction without imputation causes artifacts which sometimes
+happens with this method.}
+
 \item{return_bl}{A logical value indicating if for each spectrum the baseline
 should be returned instead of the corrected intensity values
 (\code{return_bl = TRUE}) or not (\code{return_bl = FALSE}).}
+
+\item{...}{Ignored.}
 }
 \value{
 An object of class \code{ir} with the baseline corrected spectra and,
@@ -24,7 +32,7 @@ function for \code{\link[hyperSpec:spc-rubberband]{hyperSpec::spc.rubberband()}}
 }
 \examples{
 x1 <-
-   ir::ir_sample_data \%>\%
+   ir::ir_sample_data |>
    ir::ir_bc_rubberband(return_bl = FALSE)
 
 }

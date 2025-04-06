@@ -14,28 +14,40 @@
 #' @param dw A numerical value representing the desired wavenumber value
 #' difference between adjacent values.
 #'
-#' @return An object of class `ir` containing the interpolated spectra. Any
-#' `NA` values resulting from interpolation will be automatically dropped.
+#' @param return_ir_flat Logical value. If `TRUE`, the spectra are returned as
+#' [`ir_flat`][ir_new_ir_flat()] object.
+#'
+#' @return An object of class `ir` (or `ir_flat`, if `return_ir_flat = TRUE`),
+#' containing the interpolated spectra. Any `NA` values resulting from
+#' interpolation will be automatically dropped.
 #'
 #' @examples
 #' x <-
-#'    ir::ir_sample_data %>%
+#'    ir::ir_sample_data |>
 #'    ir::ir_interpolate(start = NULL, dw = 1)
 #'
 #' @export
-ir_interpolate <- function(x, start = NULL, dw = 1) {
+ir_interpolate <- function(x, start = NULL, dw = 1, return_ir_flat = FALSE) {
 
   # checks
+  if(!is.logical(return_ir_flat) | length(return_ir_flat) != 1) {
+    rlang::abort('`return_ir_flat` must be a logical value.')
+  }
   .start <- eval(match.call()$start, parent.frame()) # avoid confusion with function `start()`
   ir_check_ir(x)
+  empty_spectra <- ir_identify_empty_spectra(x)
+  if(all(empty_spectra)) {
+    return(x)
+  }
+  # new
+  x_flat <- ir::ir_flatten(x)
+  x_flat <- x_flat[order(x_flat$x), ]
   x_range_max <-
-    x %>%
-    ir_drop_unneccesary_cols() %>%
-    range(.dimension = "x", .col_names = c("x_min", "x_max"), na.rm = TRUE) %>%
-    dplyr::summarise(
-      start = min(.data$x_min),
-      end = max(.data$x_max)
+    tibble::tibble(
+      start = min(x_flat$x),
+      end = max(x_flat$x)
     )
+
   stopifnot(is.null(.start) || (is.numeric(.start) && length(.start == 1)))
   if(is.null(.start)) {
     .start <- floor(x_range_max$start)
@@ -47,40 +59,39 @@ ir_interpolate <- function(x, start = NULL, dw = 1) {
   # define the new x axis values
   wavenumber_new <- seq(from = .start, to = x_range_max$end, by = dw)
   n_wavenumber_new <- length(wavenumber_new)
-  x <-
-    x %>%
+
+  x_flat_new <-
+    matrix(NA, nrow = n_wavenumber_new, ncol = ncol(x_flat)) %>%
+    as.data.frame() %>%
+    stats::setNames(nm = colnames(x_flat)) %>%
     dplyr::mutate(
-      spectra = purrr::map(.data$spectra, dplyr::arrange, .data$x)
+      x = wavenumber_new
     )
 
-  # do the interpolation
-  x %>%
-    dplyr::mutate(
-      spectra = purrr::map(.data$spectra, function(z) {
+  for(i in seq_len(ncol(x_flat))[-1]) {
+    if(sum(! is.na(x_flat[, i, drop = TRUE])) <= 1) {
+      next;
+    }
+    x_flat_new[, i] <-
+      stats::approx(
+        x = x_flat$x,
+        y = x_flat[, i, drop = TRUE],
+        xout = x_flat_new$x,
+        method = "linear",
+        rule = 1,
+        ties = "ordered"
+      )$y
+  }
 
-        x_new <- wavenumber_new
+  res <-
+    if(return_ir_flat) {
+      x_flat_new
+    } else {
+      x$spectra <-
+        ir::ir_stack(x_flat_new)$spectra
+      x
+    }
 
-        if(all(is.na(z$y))) {
-          y_new <- rep(NA_real_, n_wavenumber_new)
-        } else {
-          y_new <-
-            stats::approx(
-              x = z$x,
-              y = z$y,
-              xout = x_new,
-              method = "linear",
-              rule = 1,
-              ties = "ordered"
-            )$y
-        }
-
-        tibble::tibble(
-          x = x_new,
-          y = y_new
-        ) %>%
-          dplyr::filter(!is.na(.data$y))
-
-      })
-    )
+  res
 
 }

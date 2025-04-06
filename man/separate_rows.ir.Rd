@@ -30,10 +30,10 @@ Separate a collapsed column in an \code{ir} object into multiple rows
 }
 \examples{
 ## separate_rows
-ir_sample_data \%>\%
+ir_sample_data |>
   tidyr::unite(
     col = content, holocellulose, klason_lignin
-  ) \%>\%
+  ) |>
   tidyr::separate_rows(
     col
   )
@@ -48,8 +48,8 @@ Other tidyverse:
 \code{\link{filter-joins}},
 \code{\link{filter.ir}()},
 \code{\link{group_by}},
-\code{\link{mutate-joins}},
 \code{\link{mutate}},
+\code{\link{mutate-joins}},
 \code{\link{nest}},
 \code{\link{pivot_longer.ir}()},
 \code{\link{pivot_wider.ir}()},

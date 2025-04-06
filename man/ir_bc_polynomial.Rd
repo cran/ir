@@ -4,7 +4,7 @@
 \alias{ir_bc_polynomial}
 \title{Performs baseline correction on infrared spectra using a polynomial}
 \usage{
-ir_bc_polynomial(x, degree = 2, return_bl = FALSE)
+ir_bc_polynomial(x, degree = 2, return_bl = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class \code{\link[=ir_new_ir]{ir}}.}
@@ -15,6 +15,8 @@ used for baseline correction.}
 \item{return_bl}{A logical value indicating if for each spectrum the baseline
 should be returned instead of the corrected intensity values
 (\code{return_bl = TRUE}) or not (\code{return_bl = FALSE}).}
+
+\item{...}{Ignored.}
 }
 \value{
 An object of class \code{ir} with the baseline corrected spectra if
@@ -27,9 +29,11 @@ spectra using a polynomial.
 for \code{\link[ChemoSpec:baselineSpectra]{ChemoSpec::baselineSpectra()}}.
 }
 \examples{
-x2 <-
-   ir::ir_sample_data \%>\%
-   ir::ir_bc_polynomial(degree = 2, return_bl = FALSE)
+if(! requireNamespace("ChemoSpec", quietly = TRUE)) {
+  x2 <-
+     ir::ir_sample_data |>
+     ir::ir_bc_polynomial(degree = 2, return_bl = FALSE)
+}
 
 }
 \seealso{

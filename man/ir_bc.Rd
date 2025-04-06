@@ -4,7 +4,7 @@
 \alias{ir_bc}
 \title{Performs baseline correction on infrared spectra}
 \usage{
-ir_bc(x, method = "rubberband", ..., return_bl = FALSE)
+ir_bc(x, method = "rubberband", return_bl = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class \code{\link[=ir_new_ir]{ir}}.}
@@ -16,12 +16,12 @@ rubberband function is used for baseline correction. If \code{method = "sg"},
 a Savitzky-Golay smoothed version of the input spectra is used for baseline
 correction.}
 
-\item{...}{Further arguments passed to \code{\link[=ir_bc_polynomial]{ir_bc_polynomial()}} or
-\code{\link[=ir_bc_sg]{ir_bc_sg()}}.}
-
 \item{return_bl}{A logical value indicating if for each spectrum the baseline
 should be returned instead of the corrected intensity values
 (\code{return_bl = TRUE}) or not (\code{return_bl = FALSE}).}
+
+\item{...}{Further arguments passed to \code{\link[=ir_bc_polynomial]{ir_bc_polynomial()}},
+\code{\link[=ir_bc_rubberband]{ir_bc_rubberband()}} or \code{\link[=ir_bc_sg]{ir_bc_sg()}}.}
 }
 \value{
 An object of class \code{ir} with the baseline corrected spectra, or if
@@ -40,26 +40,30 @@ library(dplyr)
 
 # rubberband baseline correction
 x1 <-
-   ir::ir_sample_data \%>\%
-   dplyr::slice(1:10) \%>\%
+   ir::ir_sample_data |>
+   dplyr::slice(1:10) |>
    ir::ir_bc(method = "rubberband")
 
 # polynomial baseline correction
-x2 <-
-   ir::ir_sample_data \%>\%
-   dplyr::slice(1:10) \%>\%
-   ir::ir_bc(method = "polynomial", degree = 2)
+if(!requireNamespace("ChemoSpec", quietly = TRUE)) {
+  x2 <-
+    ir::ir_sample_data |>
+    dplyr::slice(1:10) |>
+    ir::ir_bc(method = "polynomial", degree = 2)
+}
 
 # Savitzky-Golay baseline correction
-x3 <-
-   ir::ir_sample_data \%>\%
-   dplyr::slice(1:10) \%>\%
-   ir::ir_bc(method = "sg", p = 3, n = 199, ts = 1, m = 0)
+if(!requireNamespace("signal", quietly = TRUE)) {
+  x3 <-
+     ir::ir_sample_data |>
+     dplyr::slice(1:10) |>
+     ir::ir_bc(method = "sg", p = 3, n = 199, ts = 1, m = 0)
+}
 
 # return the baseline instead of the baseline corrected spectra
 x1_bl <-
-   ir::ir_sample_data \%>\%
-   dplyr::slice(1:10) \%>\%
+   ir::ir_sample_data |>
+   dplyr::slice(1:10) |>
    ir::ir_bc(method = "rubberband", return_bl = TRUE)
 
 }

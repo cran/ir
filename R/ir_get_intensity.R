@@ -24,7 +24,7 @@
 #'
 #' @examples
 #' x <-
-#'    ir::ir_sample_data %>%
+#'    ir::ir_sample_data |>
 #'    ir::ir_get_intensity(wavenumber = 1090)
 #'
 #' @export
@@ -34,10 +34,10 @@ ir_get_intensity <- function(x, wavenumber, warn = TRUE) {
   ir_check_ir(x)
 
   x$intensity <-
-    purrr::map(x$spectra, function(d) {
+    purrr::map(x$spectra, function(.x) {
       tibble::tibble(
         x = wavenumber,
-        y = d$y[ir_get_wavenumberindex(d, wavenumber = wavenumber, warn = warn)]
+        y = .x$y[ir_get_wavenumberindex(.x, wavenumber = wavenumber, warn = warn)]
       )
     })
   x

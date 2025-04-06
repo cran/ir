@@ -22,8 +22,8 @@
 #'
 #' @examples
 #' x_index_1090 <-
-#'    ir::ir_sample_data %>%
-#'    ir::ir_flatten() %>%
+#'    ir::ir_sample_data |>
+#'    ir::ir_flatten() |>
 #'    ir::ir_get_wavenumberindex(wavenumber = 1090)
 #'
 #' @export
@@ -39,7 +39,7 @@ ir_get_wavenumberindex <- function(x, wavenumber, warn = TRUE) {
 
   # get matching wavenumber values
   if(nrow(x) == 0) {
-    res <- NA
+    return(NA_integer_)
   } else {
     res <-
       purrr::map_int(wavenumber, function(y){
@@ -51,11 +51,13 @@ ir_get_wavenumberindex <- function(x, wavenumber, warn = TRUE) {
   d_wavenumber <- x$x[res]
 
   # check if the specified wavenumber equals the selected wavenumber value
-  match_wavenumber <-
-    purrr::map2_lgl(d_wavenumber, wavenumber, function(x, y) all.equal(x, y) == TRUE)
+  if(warn){
+    match_wavenumber <-
+      purrr::map2_lgl(d_wavenumber, wavenumber, function(x, y) all.equal(x, y) == TRUE)
 
-  if(any(!match_wavenumber) && warn){
-    rlang::warn(paste0(d_wavenumber[!match_wavenumber], " selected instead of ", wavenumber[!match_wavenumber],"."))
+    if(any(!match_wavenumber)) {
+      rlang::warn(paste0(d_wavenumber[!match_wavenumber], " selected instead of ", wavenumber[!match_wavenumber],"."))
+    }
   }
 
   res

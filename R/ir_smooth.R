@@ -45,20 +45,26 @@
 #'
 #' @examples
 #' #' # Savitzky-Golay smoothing
-#' x1 <-
-#'    ir::ir_sample_data[1:5, ] %>%
-#'    ir::ir_smooth(method = "sg", p = 3, n = 51, ts = 1, m = 0)
+#' if(! requireNamespace("signal", quietly = TRUE)) {
+#'   x1 <-
+#'      ir::ir_sample_data[1:5, ] |>
+#'      ir::ir_smooth(method = "sg", p = 3, n = 51, ts = 1, m = 0)
+#' }
 #'
 #' # Fourier smoothing
-#' x2 <-
-#'    ir::ir_sample_data[1:5, ] %>%
-#'    ir::ir_smooth(method = "fourier", k = 21)
+#' if(! requireNamespace("fda", quietly = TRUE)) {
+#'   x2 <-
+#'      ir::ir_sample_data[1:5, ] |>
+#'      ir::ir_smooth(method = "fourier", k = 21)
+#' }
 #'
 #' # computing derivative spectra with Savitzky-Golay smoothing (here: first
 #' # derivative)
-#' x3 <-
-#'    ir::ir_sample_data[1:5, ] %>%
-#'    ir::ir_smooth(method = "sg", p = 3, n = 51, ts = 1, m = 1)
+#' if(! requireNamespace("signal", quietly = TRUE)) {
+#'   x3 <-
+#'      ir::ir_sample_data[1:5, ] |>
+#'      ir::ir_smooth(method = "sg", p = 3, n = 51, ts = 1, m = 1)
+#' }
 #'
 #' @export
 ir_smooth <- function(x,
@@ -71,11 +77,18 @@ ir_smooth <- function(x,
                       ...) {
 
   # checks
+  if(! requireNamespace("signal", quietly = TRUE)) {
+    rlang::abort("Package 'signal' required, please install that first.")
+  }
   if(!inherits(x, "ir")) {
     rlang::abort(paste0("`x` must be of class ir, not ", class(x)[[1]],"."))
   }
   if(!(is.character(method) & method %in% c("sg", "fourier"))){
     rlang::abort("`method` must be one of 'sg' or 'fourier'.")
+  }
+  spectrum_is_empty <- ir_identify_empty_spectra(x)
+  if(all(spectrum_is_empty)) {
+    return(x)
   }
 
   # smooth the spectra
@@ -83,7 +96,12 @@ ir_smooth <- function(x,
     method,
     sg = {
       x$spectra <-
-        purrr::map(x$spectra, function(y) {
+        purrr::map2(x$spectra, spectrum_is_empty, function(y, .z) {
+
+          if(.z) {
+            return(y)
+          }
+
           index <- !is.na(y$y)
           y$y[index] <-
             signal::sgolayfilt(x = y$y[index], p = p, n = n, ts = ts, m = m)
@@ -92,7 +110,11 @@ ir_smooth <- function(x,
     },
     fourier = {
       x$spectra <-
-        purrr::map(x$spectra, function(y) {
+        purrr::map2(x$spectra, spectrum_is_empty, function(y, .z) {
+
+          if(.z) {
+            return(y)
+          }
 
           index <- !is.na(y$y)
 

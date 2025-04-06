@@ -4,51 +4,101 @@
 \alias{ir_as_ir}
 \alias{ir_as_ir.ir}
 \alias{ir_as_ir.data.frame}
-\title{Generic to convert objects to class \code{ir}}
+\alias{ir_as_ir.ir_flat}
+\alias{ir_as_ir.hyperSpec}
+\alias{ir_as_ir.Spectra}
+\title{Converts an object to class \code{ir}}
 \usage{
 ir_as_ir(x, ...)
 
 \method{ir_as_ir}{ir}(x, ...)
 
 \method{ir_as_ir}{data.frame}(x, ...)
+
+\method{ir_as_ir}{ir_flat}(x, ...)
+
+\method{ir_as_ir}{hyperSpec}(x, ...)
+
+\method{ir_as_ir}{Spectra}(x, ...)
 }
 \arguments{
 \item{x}{An object.}
 
 \item{...}{Further arguments passed to individual methods.
 \itemize{
-\item If \code{x} is a data frame or an object of class \code{ir}, these are
-ignored.
+\item If \code{x} is a data frame, an object of class \code{ir}, an object of class
+\code{hyperSpec} (from package 'hyperSpec'), or an object of class \code{Spectra}
+(from package 'ChemoSpec'), these are ignored.
 }}
 }
 \value{
-An object of class \code{ir}.
+An object of class \code{ir} with available metadata from original
+objects.
 }
 \description{
-\code{ir_as_ir} ir the generic to convert an object to an object of class
-\code{\link[=ir_new_ir]{ir}}.
+\code{ir_as_ir} converts an object to an object of class \code{\link[=ir_new_ir]{ir}}.
 }
 \examples{
 # conversion from an ir object
-ir::ir_sample_data \%>\%
+ir::ir_sample_data |>
   ir_as_ir()
 
 # conversion from a data frame
 x_ir <- ir::ir_sample_data
 
 x_df <-
-  x_ir \%>\%
-  ir_drop_spectra() \%>\%
+  x_ir |>
+  ir_drop_spectra() |>
   dplyr::mutate(
     spectra = x_ir$spectra
-  ) \%>\%
+  ) |>
   ir_as_ir()
 
 # check that ir_as_ir preserves the input class
-ir_sample_data \%>\%
-  structure(class = setdiff(class(.), "ir")) \%>\%
-  dplyr::group_by(sample_type) \%>\%
+ir_sample_data |>
+  structure(class = setdiff(class(ir_sample_data), "ir")) |>
+  dplyr::group_by(sample_type) |>
   ir_as_ir()
 
+
+# conversion from an ir_flat object
+x_ir <-
+  ir::ir_sample_data |>
+  ir::ir_flatten() |>
+  ir::ir_as_ir()
+
+# conversion from a hyperSpec object from package hyperSpec
+if(requireNamespace("hyperSpec")) {
+  x_hyperSpec <- hyperSpec::laser
+  x_ir <- ir_as_ir(x_hyperSpec)
+}
+
+# conversion from a Spectra object from class ChemoSpec
+if(requireNamespace("ChemoSpec")) {
+
+  ## sample data
+  x <- ir_sample_data
+  x_flat <- ir_flatten(x)
+
+  ## creation of the object of class "Spectra" (the ChemoSpec package does
+  ## not contain a sample Spectra object)
+  n <- nrow(x)
+  group_vector <- seq(from = 1, to = n, by = 1)
+  color_vector <- rep("black", times = n)
+  x_Spectra <- list() # dummy list
+  x_Spectra$freq <- as.numeric(x_flat[,1, drop = TRUE]) # wavenumber vector
+  x_Spectra$data <- as.matrix(t(x_flat[,-1])) # absorbance values as matrix
+  x_Spectra$names <- as.character(seq_len(nrow(x))) # sample names
+  x_Spectra$groups <- as.factor(group_vector) # grouping vector
+  x_Spectra$colors <- color_vector # colors used for groups in plots
+  x_Spectra$sym <- as.numeric(group_vector) # symbols used for groups in plots
+  x_Spectra$alt.sym <- letters[as.numeric(group_vector)] # letters used for groups in plots
+  x_Spectra$unit <- c("wavenumbers", "intensity") # unit of x and y axes
+  x_Spectra$desc <- "NULL" # optional descriptions in plots
+  attr(x_Spectra, "class") <- "Spectra"
+
+  # conversion to ir
+  x_ir <- ir_as_ir(x_Spectra)
+}
 
 }

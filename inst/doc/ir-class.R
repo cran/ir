@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -10,23 +10,23 @@ knitr::opts_chunk$set(
 ## ----load-package-ir----------------------------------------------------------
 library(ir)
 
-## ---- results='hide'----------------------------------------------------------
+## ----results='hide'-----------------------------------------------------------
 ir_sample_data
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 rmarkdown::paged_table(ir_sample_data)
 
 ## -----------------------------------------------------------------------------
 head(ir_sample_data$spectra[[1]])
 
-## ---- results='hide'----------------------------------------------------------
+## ----results='hide'-----------------------------------------------------------
 d <- ir_sample_data
 d$spectra[[1]] <- d$spectra[[1]][0, ]
 d$spectra[[1]]
 
 ir_normalize(d, method = "area")
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 d <- ir_sample_data
 d$spectra[[1]] <- d$spectra[[1]][0, ]
 d$spectra[[1]]
@@ -36,10 +36,10 @@ rmarkdown::paged_table(ir_normalize(d, method = "area"))
 ## -----------------------------------------------------------------------------
 methods(class = "ir")
 
-## ---- results='hide'----------------------------------------------------------
+## ----results='hide'-----------------------------------------------------------
 ir_sample_data[5:10, ]
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 rmarkdown::paged_table(ir_sample_data[5:10, ])
 
 ## -----------------------------------------------------------------------------
@@ -59,25 +59,25 @@ d3 <- ir_sample_data
 colnames(d3$spectra[[1]]) <- c("a", "b")
 class(d3)
 
-## ---- results='hide'----------------------------------------------------------
+## ----results='hide'-----------------------------------------------------------
 library(dplyr)
 
 d <- ir_sample_data
 
 d <- 
-  d %>%
-  mutate(a = rnorm(n = nrow(.)))
+  d |>
+  mutate(a = rnorm(n = length(spectra)))
   
 head(ir_sample_data)
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 library(dplyr)
 
 d <- ir_sample_data
 
 d1 <- 
-  d %>%
-  mutate(a = rnorm(n = nrow(.)))
+  d |>
+  mutate(a = rnorm(n = length(spectra)))
   
 rmarkdown::paged_table(head(ir_sample_data))
 
@@ -86,19 +86,19 @@ library(purrr)
 library(ggplot2)
 
 d2 <- 
-  d %>%
-  group_by(sample_type) %>%
+  d |>
+  group_by(sample_type) |>
   summarize(
     spectra = {
       res <- map_dfc(spectra, function(.x) .x[, 2, drop = TRUE])
-      spectra[[1]] %>%
+      spectra[[1]] |>
         dplyr::mutate(
           y =
-            res %>%
-            rowwise() %>%
-            mutate(y = max(c_across(everything()))) %>%
+            res |>
+            rowwise() |>
+            mutate(y = max(c_across(everything()))) |>
             pull(y)
-        ) %>%
+        ) |>
         list()
     },
     .groups = "drop"
@@ -107,34 +107,35 @@ d2 <-
 plot(d2) + 
   facet_wrap(~ sample_type)
 
-## ---- results='hide'----------------------------------------------------------
-ir_sample_data %>%
-  slice(2) %>%
+## ----results='hide'-----------------------------------------------------------
+ir_sample_data |>
+  slice(2) |>
   rep(20)
 
-## ---- echo=FALSE--------------------------------------------------------------
-ir_sample_data %>%
-  slice(2) %>%
-  rep(20) %>%
+## ----echo=FALSE---------------------------------------------------------------
+ir_sample_data |>
+  slice(2) |>
+  rep(20) |>
   rmarkdown::paged_table()
 
 ## -----------------------------------------------------------------------------
-ir_sample_data %>%
-  slice(2) %>%
-  ir_subtract(y = ir_sample_data[3, ]) %>%
-  dplyr::mutate(id_sample = "subtraction_result") %>%
-  rbind(ir_sample_data[2:3, ]) %>%
-  plot() + facet_wrap(~ id_sample)
+ir_sample_data |>
+  slice(2) |>
+  ir_subtract(y = ir_sample_data[3, ]) |>
+  dplyr::mutate(id_sample = "subtraction_result") |>
+  rbind(ir_sample_data[2:3, ]) |>
+  plot() + 
+  facet_wrap(~ id_sample)
 
-## ---- error=TRUE--------------------------------------------------------------
+## ----error=TRUE---------------------------------------------------------------
 # This will not work
-ir_sample_data %>%
-  slice(6) %>%
+ir_sample_data |>
+  slice(6) |>
   ir_add(y = ir_sample_data[3:4, ])
 
 # but this will
-ir_sample_data %>%
-  slice(2:6) %>%
+ir_sample_data |>
+  slice(2:6) |>
   ir_add(y = ir_sample_data[3, ]) 
 
 ## -----------------------------------------------------------------------------
@@ -143,6 +144,6 @@ ir_sample_data[2, ] - ir_sample_data[3, ]
 ir_sample_data[2, ] * ir_sample_data[3, ]
 ir_sample_data[2, ] / ir_sample_data[3, ]
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 sessionInfo()
 

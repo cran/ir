@@ -1,0 +1,12 @@
+citHeader("To cite ir in publications use:")
+
+bibentry(
+  bibtype    =       "misc",
+  title = "ir: Functions to handle and preprocess infrared spectra",
+  shorttitle = "ir",
+  author = "Henning Teickner",
+  publisher = "Comprehensive R Archive Network",
+  doi = "10.32614/CRAN.package.ir",
+  langid = "english",
+  textVersion = "Henning Teickner (2025): ir: Functions to handle and preprocess infrared spectra. DOI: 10.32614/CRAN.package.ir."
+)

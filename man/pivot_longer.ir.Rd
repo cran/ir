@@ -73,11 +73,7 @@ zero-length vector (like \code{integer()} or \code{numeric()}) that defines the 
 class, and attributes of a vector. Use these arguments if you want to
 confirm that the created columns are the types that you expect. Note that
 if you want to change (instead of confirm) the types of specific columns,
-you should use \code{names_transform} or \code{values_transform} instead.
-
-For backwards compatibility reasons, supplying \code{list()} is interpreted as
-being identical to \code{NULL} rather than as using a list prototype on all
-columns. Expect this to change in the future.}
+you should use \code{names_transform} or \code{values_transform} instead.}
 
 \item{names_transform, values_transform}{Optionally, a list of column
 name-function pairs. Alternatively, a single function can be supplied,
@@ -118,7 +114,7 @@ Pivot an \code{ir} object from wide to long
 }
 \examples{
 ## pivot_longer
-ir_sample_data \%>\%
+ir_sample_data |>
   tidyr::pivot_longer(
     cols = dplyr::any_of(c("holocellulose", "klason_lignin"))
   )
@@ -133,8 +129,8 @@ Other tidyverse:
 \code{\link{filter-joins}},
 \code{\link{filter.ir}()},
 \code{\link{group_by}},
-\code{\link{mutate-joins}},
 \code{\link{mutate}},
+\code{\link{mutate-joins}},
 \code{\link{nest}},
 \code{\link{pivot_wider.ir}()},
 \code{\link{rename}},

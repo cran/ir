@@ -1,7 +1,3 @@
-#' @importFrom baseline baseline
-NULL
-# This is required for `ChemoSpec::baselineSpectra()`
-
 #' Performs baseline correction on infrared spectra
 #'
 #' `ir_bc` performs baseline correction for infrared spectra. Baseline
@@ -22,8 +18,8 @@ NULL
 #' a Savitzky-Golay smoothed version of the input spectra is used for baseline
 #' correction.
 #'
-#' @param ... Further arguments passed to [ir_bc_polynomial()] or
-#'  [ir_bc_sg()].
+#' @param ... Further arguments passed to [ir_bc_polynomial()],
+#' [ir_bc_rubberband()] or [ir_bc_sg()].
 #'
 #' @param return_bl A logical value indicating if for each spectrum the baseline
 #' should be returned instead of the corrected intensity values
@@ -37,33 +33,37 @@ NULL
 #'
 #' # rubberband baseline correction
 #' x1 <-
-#'    ir::ir_sample_data %>%
-#'    dplyr::slice(1:10) %>%
+#'    ir::ir_sample_data |>
+#'    dplyr::slice(1:10) |>
 #'    ir::ir_bc(method = "rubberband")
 #'
 #' # polynomial baseline correction
-#' x2 <-
-#'    ir::ir_sample_data %>%
-#'    dplyr::slice(1:10) %>%
-#'    ir::ir_bc(method = "polynomial", degree = 2)
+#' if(!requireNamespace("ChemoSpec", quietly = TRUE)) {
+#'   x2 <-
+#'     ir::ir_sample_data |>
+#'     dplyr::slice(1:10) |>
+#'     ir::ir_bc(method = "polynomial", degree = 2)
+#' }
 #'
 #' # Savitzky-Golay baseline correction
-#' x3 <-
-#'    ir::ir_sample_data %>%
-#'    dplyr::slice(1:10) %>%
-#'    ir::ir_bc(method = "sg", p = 3, n = 199, ts = 1, m = 0)
+#' if(!requireNamespace("signal", quietly = TRUE)) {
+#'   x3 <-
+#'      ir::ir_sample_data |>
+#'      dplyr::slice(1:10) |>
+#'      ir::ir_bc(method = "sg", p = 3, n = 199, ts = 1, m = 0)
+#' }
 #'
 #' # return the baseline instead of the baseline corrected spectra
 #' x1_bl <-
-#'    ir::ir_sample_data %>%
-#'    dplyr::slice(1:10) %>%
+#'    ir::ir_sample_data |>
+#'    dplyr::slice(1:10) |>
 #'    ir::ir_bc(method = "rubberband", return_bl = TRUE)
 #'
 #' @export
 ir_bc <- function(x,
                   method = "rubberband",
-                  ...,
-                  return_bl = FALSE) {
+                  return_bl = FALSE,
+                  ...) {
 
   # checks
   ir_check_ir(x)
@@ -85,7 +85,8 @@ ir_bc <- function(x,
     rubberband = {
       ir_bc_rubberband(
         x,
-        return_bl = return_bl
+        return_bl = return_bl,
+        ...
       )
     },
     sg = {
@@ -115,18 +116,36 @@ ir_bc <- function(x,
 #' @return An object of class `ir` with the baseline corrected spectra if
 #' `returnbl = FALSE` or the baselines if `returnbl = TRUE`.
 #'
+#' @param ... Ignored.
+#'
 #' @seealso
 #' [ir_bc()]
 #'
 #' @examples
-#' x2 <-
-#'    ir::ir_sample_data %>%
-#'    ir::ir_bc_polynomial(degree = 2, return_bl = FALSE)
+#' if(! requireNamespace("ChemoSpec", quietly = TRUE)) {
+#'   x2 <-
+#'      ir::ir_sample_data |>
+#'      ir::ir_bc_polynomial(degree = 2, return_bl = FALSE)
+#' }
 #'
 #' @export
 ir_bc_polynomial <- function(x,
                              degree = 2,
-                             return_bl = FALSE){
+                             return_bl = FALSE,
+                             ...){
+
+  if(! requireNamespace(package = "ChemoSpec", quietly = TRUE)) {
+    rlang::abort("Package 'ChemoSpec' required. Please install that first.")
+  }
+  if(! requireNamespace(package = "baseline", quietly = TRUE)) {
+    rlang::abort("Package 'baseline' required. Please install that first.")
+  }
+  spectrum_is_empty <- ir_identify_empty_spectra(x)
+  if(all(spectrum_is_empty)) {
+    return(x)
+  }
+  x_or <- x
+  x <- x[!spectrum_is_empty, ]
 
   # flatten x
   x_flat <- ir_flatten(x = x, measurement_id = as.character(seq_len(nrow(x))))
@@ -142,7 +161,7 @@ ir_bc_polynomial <- function(x,
   x_cs <- list() # dummy list
   x_cs$freq <- as.numeric(x_flat[,1, drop = TRUE]) # wavenumber vector
   x_cs$data <- as.matrix(t(x_flat[,-1])) # absorbance values as matrix
-  x_cs$names <- x$measurement_id # sample names
+  x_cs$names <- seq_len(nrow(x)) # sample names
   x_cs$groups <- as.factor(group_vector) # grouping vector
   x_cs$colors <- color_vector # colors used for groups in plots
   x_cs$sym <- as.numeric(group_vector) # symbols used for groups in plots
@@ -180,7 +199,9 @@ ir_bc_polynomial <- function(x,
     x$spectra <- ir_stack(x_bl1)$spectra
   }
 
-  x
+  x_or$spectra[!spectrum_is_empty] <- x$spectra
+
+  x_or
 
 }
 
@@ -193,59 +214,82 @@ ir_bc_polynomial <- function(x,
 #'
 #' @inheritParams ir_bc
 #'
+#' @param do_impute A logical value indicating whether the in baseline the first
+#' and last values should be imputed with the second first and second last
+#' values, respectively (`TRUE`) or not (`FALSE`). This can be useful in case
+#' baseline correction without imputation causes artifacts which sometimes
+#' happens with this method.
+#'
 #' @return An object of class `ir` with the baseline corrected spectra and,
 #' if `returnbl = TRUE`,  the baselines.
+#'
+#' @param ... Ignored.
 #'
 #' @seealso
 #' [ir_bc()]
 #'
 #' @examples
 #' x1 <-
-#'    ir::ir_sample_data %>%
+#'    ir::ir_sample_data |>
 #'    ir::ir_bc_rubberband(return_bl = FALSE)
 #'
 #' @export
 ir_bc_rubberband <- function(x,
-                             return_bl = FALSE) {
+                             do_impute = FALSE,
+                             return_bl = FALSE,
+                             ...) {
 
-  x_bl <-
-    x %>%
-    dplyr::mutate(
-      spectra =
-        purrr::map(.data$spectra, function(z) {
+  spectrum_is_empty <- ir_identify_empty_spectra(x)
+  x_flat <- ir_flatten(x)
 
-          # create a hyperSpec object
-          z_hs <-
-            methods::new(
-              "hyperSpec",
-              spc = t(z$y),
-              wavelength = z$x
-            )
-
-          # calculate the baseline
-          z_bl <-
-            hyperSpec::spc.rubberband(
-              z_hs,
-              spline = FALSE,
-              df = 30
-            )@data$spc
-
-          # remove NAs at the beginning and end
-          z_bl[is.na(z_bl)] <- 0 # ___ remove if bug in hyperSpec is fixed
-
-          z %>%
-            dplyr::mutate(
-              y = z_bl[1, ]
-            )
-
-        })
+  # create a hyperSpec object
+  z_hs <-
+    methods::new(
+      "hyperSpec",
+      spc = t(x_flat[, -c(1, which(spectrum_is_empty) + 1L), drop = FALSE]),
+      wavelength = x_flat$x
     )
 
-  if(return_bl) {
-    x_bl
-  } else {
-    ir_subtract(x, x_bl)
+  # calculate the baseline
+  z_bl <-
+    hyperSpec::spc.rubberband(
+      z_hs,
+      spline = FALSE,
+      df = 30
+    )@data$spc
+
+  # remove NAs at the beginning and end
+  z_bl[is.na(z_bl)] <- 0 # ---todo: remove if bug in hyperSpec is fixed
+
+  # impute first and last values
+  if(do_impute) {
+    z_bl[, 1] <- z_bl[, 2]
+    z_bl[, ncol(z_bl)] <- z_bl[, ncol(z_bl) - 1L]
   }
+
+  z_bl <- as.data.frame(t(z_bl))
+
+  index_x_flat_is_na <- is.na(x_flat)
+
+  if(return_bl) {
+    x_flat[, -c(1, which(spectrum_is_empty) + 1L)] <- z_bl
+  } else {
+    x_flat[, -c(1, which(spectrum_is_empty) + 1L)] <- x_flat[, -c(1, which(spectrum_is_empty) + 1L)] - z_bl
+  }
+  x_flat[index_x_flat_is_na] <- NA_real_
+
+  x %>%
+    dplyr::mutate(
+      spectra =
+        purrr::map(seq_along(.data$spectra), function(i) {
+          res <- .data$spectra[[i]]
+          if(! spectrum_is_empty[[i]]) {
+            y <- x_flat[, i + 1L, drop = TRUE]
+            res$y <- y[! is.na(y)]
+          }
+          res
+        })
+    )
 
 }
 
@@ -269,9 +313,11 @@ ir_bc_rubberband <- function(x,
 #' if `returnbl = TRUE`,  the baselines.
 #'
 #' @examples
-#' x <-
-#'    ir::ir_sample_data %>%
-#'    ir::ir_bc_sg(p = 3, n = 199, ts = 1, m = 0, return_bl = FALSE)
+#' if(! requireNamespace("signal", quietly = TRUE)) {
+#'   x <-
+#'     ir::ir_sample_data |>
+#'     ir::ir_bc_sg(p = 3, n = 199, ts = 1, m = 0, return_bl = FALSE)
+#' }
 #'
 #' @export
 ir_bc_sg <- function(x, ..., return_bl = FALSE) {

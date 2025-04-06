@@ -20,12 +20,7 @@ extract.ir(
 \arguments{
 \item{data}{An object of class \code{ir}.}
 
-\item{col}{Column name or position. This is passed to
-\code{\link[tidyselect:vars_pull]{tidyselect::vars_pull()}}.
-
-This argument is passed by expression and supports
-\link[rlang:nse-force]{quasiquotation} (you can unquote column
-names or column positions).}
+\item{col}{<\code{\link[tidyr:tidyr_tidy_select]{tidy-select}}> Column to expand.}
 
 \item{into}{Names of new variables to create as character vector.
 Use \code{NA} to omit the variable in the output.}
@@ -53,7 +48,7 @@ Extract a character column in an \code{ir} object into multiple columns using re
 }
 \examples{
 ## extract
-ir_sample_data \%>\%
+ir_sample_data |>
   tidyr::extract(
     id_sample,  "a"
   )
@@ -67,8 +62,8 @@ Other tidyverse:
 \code{\link{filter-joins}},
 \code{\link{filter.ir}()},
 \code{\link{group_by}},
-\code{\link{mutate-joins}},
 \code{\link{mutate}},
+\code{\link{mutate-joins}},
 \code{\link{nest}},
 \code{\link{pivot_longer.ir}()},
 \code{\link{pivot_wider.ir}()},
