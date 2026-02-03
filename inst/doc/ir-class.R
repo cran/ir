@@ -128,6 +128,7 @@ ir_sample_data |>
   facet_wrap(~ id_sample)
 
 ## ----error=TRUE---------------------------------------------------------------
+try({
 # This will not work
 ir_sample_data |>
   slice(6) |>
@@ -137,6 +138,7 @@ ir_sample_data |>
 ir_sample_data |>
   slice(2:6) |>
   ir_add(y = ir_sample_data[3, ]) 
+})
 
 ## -----------------------------------------------------------------------------
 ir_sample_data[2, ] + ir_sample_data[3, ]

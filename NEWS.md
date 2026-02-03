@@ -1,4 +1,10 @@
+# ir 0.4.2
+
+* Bug fix in an example due to a new dplyr version (1.2.0).
+
 # ir 0.4.1
+
+* Updates due to a new R version.
 
 # ir 0.4.0
 
